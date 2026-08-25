@@ -32,6 +32,23 @@ int main(){
 			int s = ioctl(fd, DRM_IOCTL_MODE_GETRESOURCES, &dmcr);
 			if (s != -1){
 				printf("\nSUCCES! \n %d\t%d", CrtcsIds[0], ConnectorsIds[0]);
+
+				for( int i = 0; i < dmcr.count_connectors; i++){
+
+					struct drm_mode_get_connector conn = {0};
+
+					conn.connector_id = ConnectorsIds[i];
+
+					int s = ioctl(fd, DRM_IOCTL_MODE_GETCONNECTOR, &conn);
+
+					if( s != -1){
+
+						printf("\n%u\t%u\t%u\t%u\t%u", conn.connector_id, conn.connection, conn.count_modes, conn.count_encoders, conn.count_props);
+
+					} else {perror("getconn fail"); }
+
+				}
+
 			}else { perror("GETRES"); }
 
 		}

@@ -59,7 +59,11 @@ int main(){
 
 						uint32_t *pixels = (uint32_t *)mapped;
 
-						pixels[0] = 0xffffff;
+						for (int i = 0; i < dumb.width*dumb.height/2; i++){
+
+							pixels[i] = 0x00ffffff;
+
+						}
 
 					} else{ perror("map failed");}
 
@@ -161,6 +165,27 @@ int main(){
 
 								}
 
+								
+								struct drm_mode_crtc crtc = {0};
+
+								crtc.crtc_id = enc[0].crtc_id;
+								crtc.fb_id = 115;
+
+								crtc.x = 0;
+								crtc.y = 0;
+								crtc.mode_valid = 1;
+								crtc.mode = modes[0];
+								crtc.count_connectors = 1;
+								crtc.set_connectors_ptr = (uint64_t)(uintptr_t)&conn.connector_id;
+
+								s = ioctl(fd, DRM_IOCTL_MODE_SETCRTC, &crtc);
+								if ( s != -1){
+
+									printf("SUCCESSSS");
+
+								} else{ perror("set crtc error"); }
+										
+							
 							} else{ perror("get modes"); }
 
 						}

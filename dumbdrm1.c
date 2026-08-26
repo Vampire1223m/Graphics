@@ -66,11 +66,23 @@ int main(){
 
 									enc[j].encoder_id = encoders[j];
 
+									struct drm_mode_crtc crtc = {};
+
 									s = ioctl(fd, DRM_IOCTL_MODE_GETENCODER, &enc[j]);
 
 									if ( s != -1){
 
 										printf("\n%u\t%u\t%x\t%x", enc[j].encoder_id, enc[j].crtc_id, enc[j].possible_crtcs, enc[j].possible_clones);
+
+										crtc.crtc_id = enc[j].crtc_id;
+
+										s = ioctl(fd, DRM_IOCTL_MODE_GETCRTC, &crtc);
+
+										if ( s != -1){
+
+											printf("\n%u\t%u\t%u\t%u\t%u\t%u", crtc.fb_id, crtc.x, crtc.y, crtc.mode.vdisplay, crtc.mode.hdisplay, crtc.mode_valid);
+
+										} else{ perror("get crtc");}
 
 									} else{ perror("get encoders");}
 

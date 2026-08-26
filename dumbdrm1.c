@@ -82,6 +82,17 @@ int main(){
 
 											printf("\n%u\t%u\t%u\t%u\t%u\t%u", crtc.fb_id, crtc.x, crtc.y, crtc.mode.vdisplay, crtc.mode.hdisplay, crtc.mode_valid);
 
+											struct drm_mode_fb_cmd fb = {};
+
+											fb.fb_id = crtc.fb_id;
+											int s = ioctl(fd, DRM_IOCTL_MODE_GETFB, &fb);
+
+											if ( s != -1){
+
+												printf("\n%u\t%u\t%u\t%u\t%u\t%u", fb.fb_id, fb.width, fb.height, fb.pitch, fb.bpp, fb.depth);
+
+											} else { perror("get fb");}
+												
 										} else{ perror("get crtc");}
 
 									} else{ perror("get encoders");}

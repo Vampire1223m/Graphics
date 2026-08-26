@@ -45,6 +45,35 @@ int main(){
 
 						printf("\n%u\t%u\t%u\t%u\t%u", conn.connector_id, conn.connection, conn.count_modes, conn.count_encoders, conn.count_props);
 
+						if( conn.connection == 1){
+
+							struct drm_mode_modeinfo modes[conn.count_modes] = {};
+							uint32_t encoders[conn.count_encoders] = {};
+							uint32_t props[conn.count_props] = {};
+							uint64_t prop_values[conn.count_props] = {};
+
+							conn.modes_ptr = (uint64_t)(uintptr_t)modes;
+							conn.encoders_ptr = (uint64_t)(uintptr_t)encoders;
+							conn.props_ptr = (uint64_t)(uintptr_t)props;
+							conn.prop_values_ptr = (uint64_t)(uintptr_t)prop_values;
+
+							s = ioctl(fd, DRM_IOCTL_MODE_GETCONNECTOR, &conn);
+
+							if( s != -1){
+
+								printf("\n%u",encoders[0]);
+
+								for (int j = 0; j < conn.count_modes; j++){
+								
+									printf("\n%s\t%u\t%u",modes[j].name,modes[j].hdisplay,modes[j].vdisplay);
+
+								}
+
+							} else{ perror("get modes"); }
+
+						}
+
+
 					} else {perror("getconn fail"); }
 
 				}

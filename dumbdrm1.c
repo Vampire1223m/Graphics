@@ -2,20 +2,76 @@
 #include <unistd.h>
 #include </usr/include/libdrm/drm_mode.h>
 #include </usr/include/libdrm/drm.h>
+#include </usr/include/libdrm/drm_fourcc.h>
 #include <sys/ioctl.h>
+#include <sys/mman.h>
 #include <stdio.h>
 #include <stdint.h>
 
 int main(){
 
 	struct drm_mode_card_res dmcr = {0};
+	struct drm_mode_create_dumb dumb = {0};
 
 	int fd = open("/dev/dri/card0",O_RDWR);
 	
-	if (fd != -1){
+	if ( fd != -1){
 		printf("code = %d",fd);
-		int s = ioctl(fd, DRM_IOCTL_MODE_GETRESOURCES, &dmcr);
-		if (s != -1){
+
+		dumb.width = 1920;
+		dumb.height = 1200;
+		dumb.bpp = 32;
+
+		int s = ioctl(fd, DRM_IOCTL_MODE_CREATE_DUMB, &dumb);
+
+		if( s != -1){
+			
+			printf("\n%u\t%u\t%llu", dumb.handle, dumb.pitch, (unsigned long long)dumb.size);
+
+			struct drm_mode_fb_cmd2 fb = {0};
+			fb.width = dumb.width;
+			fb.height = dumb.height;
+			fb.pixel_format = DRM_FORMAT_XRGB8888;
+			fb.pitches[0] = dumb.pitch;
+			fb.offsets[0] = 0;
+			fb.handles[0] = dumb.handle;
+			
+			s = ioctl(fd, DRM_IOCTL_MODE_ADDFB2, &fb);
+
+			if( s != -1){
+
+				printf("\n%u",fb.fb_id);
+
+				struct drm_mode_map_dumb map = {0};
+				map.handle = dumb.handle;
+
+				s = ioctl(fd, DRM_IOCTL_MODE_MAP_DUMB, &map);
+
+				if( s != -1){
+
+					printf("\n%llu",(unsigned long long)map.offset);
+
+					void *mapped = mmap(NULL, dumb.size, PROT_READ|PROT_WRITE, MAP_SHARED, fd, map.offset);
+
+					if( mapped != MAP_FAILED){
+
+						printf("\nsucces");
+
+						uint32_t *pixels = (uint32_t *)mapped;
+
+						pixels[0] = 0xffffff;
+
+					} else{ perror("map failed");}
+
+				} else{ perror("map dumb");}
+
+			} else{ perror("create fb");}
+
+		} else{ perror("create dumb");}
+
+		s = ioctl(fd, DRM_IOCTL_MODE_GETRESOURCES, &dmcr);
+
+		if ( s != -1){
 			printf("\nSUCCES! \n %d\t%d\t%d\t%d",dmcr.count_fbs, dmcr.count_crtcs, dmcr.count_connectors, dmcr.count_encoders);
 
 			uint32_t FbsIds[dmcr.count_fbs] = {};
@@ -29,8 +85,8 @@ int main(){
 			dmcr.encoder_id_ptr = (uint64_t)(uintptr_t)EncodersIds;
 			
 			
-			int s = ioctl(fd, DRM_IOCTL_MODE_GETRESOURCES, &dmcr);
-			if (s != -1){
+			s = ioctl(fd, DRM_IOCTL_MODE_GETRESOURCES, &dmcr);
+			if ( s != -1){
 				printf("\nSUCCES! \n %d\t%d", CrtcsIds[0], ConnectorsIds[0]);
 
 				for( int i = 0; i < dmcr.count_connectors; i++){
@@ -39,7 +95,7 @@ int main(){
 
 					conn.connector_id = ConnectorsIds[i];
 
-					int s = ioctl(fd, DRM_IOCTL_MODE_GETCONNECTOR, &conn);
+					s = ioctl(fd, DRM_IOCTL_MODE_GETCONNECTOR, &conn);
 
 					if( s != -1){
 

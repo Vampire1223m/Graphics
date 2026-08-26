@@ -48,6 +48,7 @@ int main(){
 						if( conn.connection == 1){
 
 							struct drm_mode_modeinfo modes[conn.count_modes] = {};
+							struct drm_mode_get_encoder enc[conn.count_encoders] = {};
 							uint32_t encoders[conn.count_encoders] = {};
 							uint32_t props[conn.count_props] = {};
 							uint64_t prop_values[conn.count_props] = {};
@@ -61,7 +62,19 @@ int main(){
 
 							if( s != -1){
 
-								printf("\n%u",encoders[0]);
+								for (int j = 0; j < conn.count_encoders; j++){
+
+									enc[j].encoder_id = encoders[j];
+
+									s = ioctl(fd, DRM_IOCTL_MODE_GETENCODER, &enc[j]);
+
+									if ( s != -1){
+
+										printf("\n%u\t%u\t%x\t%x", enc[j].encoder_id, enc[j].crtc_id, enc[j].possible_crtcs, enc[j].possible_clones);
+
+									} else{ perror("get encoders");}
+
+								}
 
 								for (int j = 0; j < conn.count_modes; j++){
 								

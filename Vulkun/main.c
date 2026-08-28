@@ -78,6 +78,30 @@ int main(){
 
 		printf("Geo Shader: %s\n", features.geometryShader ? "Yes" : "No");
 
+		uint32_t queueFamilyCount = 0;
+
+		vkGetPhysicalDeviceQueueFamilyProperties(
+				devices[i],
+				&queueFamilyCount,
+				NULL
+			);
+
+		printf("no. of Families: %u\n", queueFamilyCount);
+
+		VkQueueFamilyProperties queueFamilies[queueFamilyCount];
+
+		vkGetPhysicalDeviceQueueFamilyProperties(
+				devices[i],
+				&queueFamilyCount,
+				queueFamilies
+			);
+
+		for (uint32_t j = 0; j < queueFamilyCount; j++){
+
+			printf("Queue family %u: %u queues, flags = 0x%x\n", j, queueFamilies[j].queueCount, queueFamilies[j].queueFlags);
+
+		}
+
 	}
 
 	return 0;

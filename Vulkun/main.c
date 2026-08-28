@@ -1,0 +1,86 @@
+#include <stdio.h>
+#include <vulkan/vulkan.h>
+
+int main(){
+
+	VkInstance instance;
+
+	VkApplicationInfo appInfo = {
+				.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO,
+				.pApplicationName = "Test 1",
+				.applicationVersion = VK_MAKE_VERSION(1, 0, 0),
+				.pEngineName = "My Engine",
+				.engineVersion = VK_MAKE_VERSION(1, 0, 0),
+				.apiVersion = VK_API_VERSION_1_3
+			};
+	
+	VkInstanceCreateInfo createInfo = {
+				.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO,
+				.pApplicationInfo = &appInfo
+			};
+
+	VkResult s = vkCreateInstance(
+				&createInfo,
+				NULL,
+				&instance
+			);
+
+	if ( s != VK_SUCCESS) {
+
+		printf("failure to create instance: %d\n", s);
+		return 1;
+
+	}
+
+	uint32_t deviceCount = 0;
+
+	s = vkEnumeratePhysicalDevices(
+				instance,
+				&deviceCount,
+				NULL
+			);
+
+	if ( s != VK_SUCCESS) {
+
+		printf("failure to cenumerate GPUs: %d\n", s);
+
+	}
+
+	printf("no. of GPUs: %d\n", deviceCount);
+
+	VkPhysicalDevice devices[deviceCount];
+
+	vkEnumeratePhysicalDevices(
+				instance,
+				&deviceCount,
+				devices
+			);
+
+	for (uint32_t i = 0; i < deviceCount; i++){
+
+		VkPhysicalDeviceProperties properties;
+
+		vkGetPhysicalDeviceProperties(
+				devices[i],
+				&properties
+			);
+
+		printf("GPU %u: %s\n:", i, properties.deviceName);
+
+		VkPhysicalDeviceFeatures features;
+
+		vkGetPhysicalDeviceFeatures(
+				devices[i],
+				&features
+			);
+
+		printf("API Version: %u,%u.%u\n", VK_VERSION_MAJOR(properties.apiVersion), VK_VERSION_MINOR(properties.apiVersion), VK_VERSION_PATCH(properties.apiVersion));
+
+		printf("Geo Shader: %s\n", features.geometryShader ? "Yes" : "No");
+
+	}
+
+	return 0;
+
+}
+

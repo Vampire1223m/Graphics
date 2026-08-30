@@ -5,6 +5,9 @@ int main(){
 
 	VkInstance instance;
 
+	uint32_t graphicsFamily = UINT32_MAX;
+	uint32_t deviceIndex = UINT32_MAX;
+
 	VkApplicationInfo appInfo = {
 				.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO,
 				.pApplicationName = "Test 1",
@@ -96,13 +99,74 @@ int main(){
 				queueFamilies
 			);
 
+
 		for (uint32_t j = 0; j < queueFamilyCount; j++){
 
 			printf("Queue family %u: %u queues, flags = 0x%x\n", j, queueFamilies[j].queueCount, queueFamilies[j].queueFlags);
 
+			if (queueFamilies[j].queueFlags & VK_QUEUE_GRAPHICS_BIT){
+
+				graphicsFamily = i;
+				break;
+
+			}
+
+		}
+
+		if (graphicsFamily == UINT32_MAX){
+
+			printf("No graphics queue family found");
+			return 1;
+
+		}
+
+		if (properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU){
+
+			deviceIndex = i;
+
 		}
 
 	}
+
+	float queuePriority = 1.0f;
+
+	VkDeviceQueueCreateInfo queueCreateInfo = {
+				.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO,
+				.queueFamilyIndex = graphicsFamily,
+				.queueCount = 1,
+				.pQueuePriorities = &queuePriority
+			};
+
+	VkDeviceCreateInfo deviceCreateInfo = {
+				.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO,
+				.queueCreateInfoCount = 1,
+				.pQueueCreateInfos = &queueCreateInfo
+			};
+
+	VkDevice device;
+
+	s = vkCreateDevice(
+			devices[deviceIndex],
+			&deviceCreateInfo,
+			NULL,
+			&device
+		);
+
+	if (s != VK_SUCCESS){
+			
+		printf("Failed to create device: %d\n", s);
+		return 1;
+	
+	}
+
+	VkQueue graphicsQueue;
+
+	vkGetDeviceQueue(
+			device,
+			graphicsFamily,
+			0,
+			&graphicsQueue
+		);
 
 	return 0;
 

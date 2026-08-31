@@ -217,6 +217,30 @@ int main(){
 
 	}
 
+	VkCommandBufferBeginInfo beginInfo = {
+				.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO
+			};
+
+	s = vkBeginCommandBuffer(cmdBuffer,&beginInfo);
+
+	if ( s != VK_SUCCESS){
+
+		printf("failed to begin command buffer");
+		return 1;
+
+	}
+
+	// cmds
+
+	s = vkEndCommandBuffer(cmdBuffer);
+
+	if ( s != VK_SUCCESS){
+
+		printf("failed to begin command buffer");
+		return 1;
+
+	}
+
 	return 0;
 
 }

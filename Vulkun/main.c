@@ -168,6 +168,55 @@ int main(){
 			&graphicsQueue
 		);
 
+	if (graphicsQueue != VK_NULL_HANDLE){
+
+		printf("got graphics queue\n");
+
+	}
+
+	VkCommandPool cmdPool;
+
+	VkCommandPoolCreateInfo poolInfo = {
+				.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO,
+				.queueFamilyIndex = graphicsFamily
+			};
+
+	s = vkCreateCommandPool(
+			device,
+			&poolInfo,
+			NULL,
+			&cmdPool
+		);
+	
+	if ( s != VK_SUCCESS){
+
+		printf("failed to create command");
+		return 1;
+
+	}
+
+	VkCommandBuffer cmdBuffer;
+
+	VkCommandBufferAllocateInfo allocInfo = {
+				.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
+				.commandPool = cmdPool,
+				.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY,
+				.commandBufferCount = 1
+			};
+
+	s = vkAllocateCommandBuffers(
+			device,
+			&allocInfo,
+			&cmdBuffer
+		);
+
+	if ( s != VK_SUCCESS){
+
+		printf("failed to allocate command buffer");
+		return 1;
+
+	}
+
 	return 0;
 
 }

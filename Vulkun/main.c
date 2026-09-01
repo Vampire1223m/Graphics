@@ -277,7 +277,36 @@ int main(){
 
 	}
 
-	printf("selected 1920x1200 @ 165Hz");
+	printf("selected 1920x1200 @ 165Hz\n");
+
+	VkDisplaySurfaceCreateInfoKHR  surfaceInfo = {
+				.sType = VK_STRUCTURE_TYPE_DISPLAY_SURFACE_CREATE_INFO_KHR,
+				.displayMode = displayMode,
+				.planeIndex = 0,
+				.planeStackIndex = 0,
+				.transform = VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR,
+				.globalAlpha = 1.0f,
+				.alphaMode = VK_DISPLAY_PLANE_ALPHA_OPAQUE_BIT_KHR,
+				.imageExtent = { 1920, 1200}
+			};
+
+	VkSurfaceKHR surface;
+
+	s = vkCreateDisplayPlaneSurfaceKHR(
+			instance,
+			&surfaceInfo,
+			NULL,
+			&surface
+		);
+
+	if ( s != VK_SUCCESS){
+
+		printf("Failed to create surface: %d\n", s);
+		return 1;
+
+	}
+
+	printf("surface created\n");
 
 	VkCommandPool cmdPool;
 

@@ -16,10 +16,16 @@ int main(){
 				.engineVersion = VK_MAKE_VERSION(1, 0, 0),
 				.apiVersion = VK_API_VERSION_1_3
 			};
+
+	const char* extensions[] = {
+				VK_KHR_DISPLAY_EXTENSION_NAME
+			};
 	
 	VkInstanceCreateInfo createInfo = {
 				.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO,
-				.pApplicationInfo = &appInfo
+				.pApplicationInfo = &appInfo,
+				.enabledExtensionCount = 1,
+				.ppEnabledExtensionNames = extensions
 			};
 
 	VkResult s = vkCreateInstance(

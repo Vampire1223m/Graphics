@@ -180,6 +180,47 @@ int main(){
 
 	}
 
+	uint32_t displayCount = 0;
+
+	s = vkGetPhysicalDeviceDisplayPropertiesKHR(
+			devices[deviceIndex],
+			&displayCount,
+			NULL
+		);
+
+	printf("Display count: %u\n", displayCount);
+	printf("s: %d\n", s);
+
+	if (s != VK_SUCCESS || displayCount == 0){
+
+		printf("No Display found");
+		return 1;
+
+	}
+
+	VkDisplayPropertiesKHR displays[displayCount];
+
+	s = vkGetPhysicalDeviceDisplayPropertiesKHR(
+			devices[deviceIndex],
+			&displayCount,
+			displays
+		);
+
+	if ( s != VK_SUCCESS){
+
+		printf("failed to get display properties");
+		return 1;
+
+	}
+
+	printf("Displays: %u\n", displayCount);
+
+	for (uint32_t i = 0; i < displayCount; i++){
+
+		printf("Display %u: %s\n", i, displays[i].displayName);
+
+	}
+
 	VkCommandPool cmdPool;
 
 	VkCommandPoolCreateInfo poolInfo = {

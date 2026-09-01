@@ -308,6 +308,31 @@ int main(){
 
 	printf("surface created\n");
 
+	VkBool32 presentSupport = VK_FALSE;
+
+	s = vkGetPhysicalDeviceSurfaceSupportKHR(
+				devices[deviceIndex],
+				graphicsFamily,
+				surface,
+				&presentSupport
+			);
+
+	if ( s != VK_SUCCESS){
+
+		printf("Failed to query surface support: %d\n", s);
+		return 1;
+
+	}
+
+	if (!presentSupport){
+
+		printf("Graphics Queue cant present the display\n");
+		return 1;
+
+	}
+
+	printf("Graphics queue works");
+
 	VkCommandPool cmdPool;
 
 	VkCommandPoolCreateInfo poolInfo = {

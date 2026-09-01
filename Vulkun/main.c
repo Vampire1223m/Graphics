@@ -241,6 +241,28 @@ int main(){
 
 	}
 
+	VkSubmitInfo submitInfo = {
+				.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO,
+				.commandBufferCount = 1,
+				.pCommandBuffers = &cmdBuffer
+			};
+
+	s = vkQueueSubmit(
+			graphicsQueue,
+			1,
+			&submitInfo,
+			VK_NULL_HANDLE
+		);
+
+	if ( s != VK_SUCCESS){
+
+		printf("failed to submit command buffer");
+		return 1;
+
+	}
+
+	vkQueueWaitIdle(graphicsQueue);
+
 	return 0;
 
 }

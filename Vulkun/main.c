@@ -221,6 +221,46 @@ int main(){
 
 	}
 
+	uint32_t modeCount = 0;
+
+	s = vkGetDisplayModePropertiesKHR(
+			devices[deviceIndex],
+			displays[0].display,
+			&modeCount,
+			NULL
+		);
+
+	if ( s != VK_SUCCESS || modeCount == 0){
+
+		printf("No display modes");
+		return 1;
+
+	}
+
+	VkDisplayModePropertiesKHR modes[modeCount];
+
+	s = vkGetDisplayModePropertiesKHR(
+			devices[deviceIndex],
+			displays[0].display,
+			&modeCount,
+			modes
+		);
+
+	if ( s != VK_SUCCESS || modeCount == 0){
+
+		printf("Failed to get display modes");
+		return 1;
+
+	}
+
+	printf("Modes: %u\n", modeCount);
+
+	for (uint32_t i = 0; i < modeCount; i++){
+
+		printf("Mode %u: %ux%u @ %u Hz\n", i, modes[i].parameters.visibleRegion.width, modes[i].parameters.visibleRegion.height, modes[i].parameters.refreshRate/1000);
+
+	}
+
 	VkCommandPool cmdPool;
 
 	VkCommandPoolCreateInfo poolInfo = {

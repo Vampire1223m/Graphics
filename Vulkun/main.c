@@ -112,7 +112,7 @@ int main(){
 
 			if (queueFamilies[j].queueFlags & VK_QUEUE_GRAPHICS_BIT){
 
-				graphicsFamily = i;
+				graphicsFamily = j;
 				break;
 
 			}
@@ -270,7 +270,7 @@ int main(){
 
 	}
 
-	if ( displayMode = VK_NULL_HANDLE){
+	if ( displayMode == VK_NULL_HANDLE){
 
 		printf("Desired mode not found");
 		return 1;

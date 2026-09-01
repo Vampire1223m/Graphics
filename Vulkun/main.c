@@ -255,11 +255,29 @@ int main(){
 
 	printf("Modes: %u\n", modeCount);
 
+	VkDisplayModeKHR displayMode = VK_NULL_HANDLE;
+
 	for (uint32_t i = 0; i < modeCount; i++){
 
 		printf("Mode %u: %ux%u @ %u Hz\n", i, modes[i].parameters.visibleRegion.width, modes[i].parameters.visibleRegion.height, modes[i].parameters.refreshRate/1000);
 
+		if ( modes[i].parameters.visibleRegion.width == 1920 && modes[i].parameters.visibleRegion.height == 1200 && modes[i].parameters.refreshRate == 165000){
+
+			displayMode = modes[i].displayMode;
+			break;
+
+		}
+
 	}
+
+	if ( displayMode = VK_NULL_HANDLE){
+
+		printf("Desired mode not found");
+		return 1;
+
+	}
+
+	printf("selected 1920x1200 @ 165Hz");
 
 	VkCommandPool cmdPool;
 

@@ -6,7 +6,6 @@ int main(){
 	VkInstance instance;
 
 	uint32_t graphicsFamily = UINT32_MAX;
-	uint32_t deviceIndex = UINT32_MAX;
 
 	VkApplicationInfo appInfo = {
 				.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO,
@@ -58,6 +57,8 @@ int main(){
 	printf("no. of GPUs: %d\n", deviceCount);
 
 	VkPhysicalDevice devices[deviceCount];
+	
+	VkPhysicalDevice Pdevice = VK_NULL_HANDLE;
 
 	vkEnumeratePhysicalDevices(
 				instance,
@@ -87,103 +88,25 @@ int main(){
 
 		printf("Geo Shader: %s\n", features.geometryShader ? "Yes" : "No");
 
-		uint32_t queueFamilyCount = 0;
-
-		vkGetPhysicalDeviceQueueFamilyProperties(
-				devices[i],
-				&queueFamilyCount,
-				NULL
-			);
-
-		printf("no. of Families: %u\n", queueFamilyCount);
-
-		VkQueueFamilyProperties queueFamilies[queueFamilyCount];
-
-		vkGetPhysicalDeviceQueueFamilyProperties(
-				devices[i],
-				&queueFamilyCount,
-				queueFamilies
-			);
-
-
-		for (uint32_t j = 0; j < queueFamilyCount; j++){
-
-			printf("Queue family %u: %u queues, flags = 0x%x\n", j, queueFamilies[j].queueCount, queueFamilies[j].queueFlags);
-
-			if (queueFamilies[j].queueFlags & VK_QUEUE_GRAPHICS_BIT){
-
-				graphicsFamily = j;
-				break;
-
-			}
-
-		}
-
-		if (graphicsFamily == UINT32_MAX){
-
-			printf("No graphics queue family found");
-			return 1;
-
-		}
-
 		if (properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU){
 
-			deviceIndex = i;
+			Pdevice = devices[i];
 
 		}
 
 	}
-
-	float queuePriority = 1.0f;
-
-	VkDeviceQueueCreateInfo queueCreateInfo = {
-				.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO,
-				.queueFamilyIndex = graphicsFamily,
-				.queueCount = 1,
-				.pQueuePriorities = &queuePriority
-			};
-
-	VkDeviceCreateInfo deviceCreateInfo = {
-				.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO,
-				.queueCreateInfoCount = 1,
-				.pQueueCreateInfos = &queueCreateInfo
-			};
-
-	VkDevice device;
-
-	s = vkCreateDevice(
-			devices[deviceIndex],
-			&deviceCreateInfo,
-			NULL,
-			&device
-		);
-
-	if (s != VK_SUCCESS){
-			
-		printf("Failed to create device: %d\n", s);
-		return 1;
 	
-	}
+	if (Pdevice == VK_NULL_HANDLE) {
 
-	VkQueue graphicsQueue;
-
-	vkGetDeviceQueue(
-			device,
-			graphicsFamily,
-			0,
-			&graphicsQueue
-		);
-
-	if (graphicsQueue != VK_NULL_HANDLE){
-
-		printf("got graphics queue\n");
+		printf("No discrete GPU found\n");
+		return 1;
 
 	}
 
 	uint32_t displayCount = 0;
 
 	s = vkGetPhysicalDeviceDisplayPropertiesKHR(
-			devices[deviceIndex],
+			Pdevice,
 			&displayCount,
 			NULL
 		);
@@ -201,7 +124,7 @@ int main(){
 	VkDisplayPropertiesKHR displays[displayCount];
 
 	s = vkGetPhysicalDeviceDisplayPropertiesKHR(
-			devices[deviceIndex],
+			Pdevice,
 			&displayCount,
 			displays
 		);
@@ -224,7 +147,7 @@ int main(){
 	uint32_t modeCount = 0;
 
 	s = vkGetDisplayModePropertiesKHR(
-			devices[deviceIndex],
+			Pdevice,
 			displays[0].display,
 			&modeCount,
 			NULL
@@ -240,7 +163,7 @@ int main(){
 	VkDisplayModePropertiesKHR modes[modeCount];
 
 	s = vkGetDisplayModePropertiesKHR(
-			devices[deviceIndex],
+			Pdevice,
 			displays[0].display,
 			&modeCount,
 			modes
@@ -279,7 +202,7 @@ int main(){
 
 	printf("selected 1920x1200 @ 165Hz\n");
 
-	VkDisplaySurfaceCreateInfoKHR  surfaceInfo = {
+	VkDisplaySurfaceCreateInfoKHR surfaceInfo = {
 				.sType = VK_STRUCTURE_TYPE_DISPLAY_SURFACE_CREATE_INFO_KHR,
 				.displayMode = displayMode,
 				.planeIndex = 0,
@@ -307,31 +230,102 @@ int main(){
 	}
 
 	printf("surface created\n");
+	
+	uint32_t queueFamilyCount = 0;
 
-	VkBool32 presentSupport = VK_FALSE;
+	vkGetPhysicalDeviceQueueFamilyProperties(
+			Pdevice,
+			&queueFamilyCount,
+			NULL
+		);
 
-	s = vkGetPhysicalDeviceSurfaceSupportKHR(
-				devices[deviceIndex],
-				graphicsFamily,
-				surface,
-				&presentSupport
-			);
+	printf("no. of Families: %u\n", queueFamilyCount);
 
-	if ( s != VK_SUCCESS){
+	VkQueueFamilyProperties queueFamilies[queueFamilyCount];
 
-		printf("Failed to query surface support: %d\n", s);
-		return 1;
+	vkGetPhysicalDeviceQueueFamilyProperties(
+			Pdevice,
+			&queueFamilyCount,
+			queueFamilies
+		);
+
+
+	for (uint32_t j = 0; j < queueFamilyCount; j++){
+
+		printf("Queue family %u: %u queues, flags = 0x%x\n", j, queueFamilies[j].queueCount, queueFamilies[j].queueFlags);
+		
+		VkBool32 presentSupport = VK_FALSE;
+
+		s = vkGetPhysicalDeviceSurfaceSupportKHR(
+					Pdevice,
+					j,
+					surface,
+					&presentSupport
+				);
+
+		if ((queueFamilies[j].queueFlags & VK_QUEUE_GRAPHICS_BIT) && presentSupport ){
+
+			graphicsFamily = j;
+			break;
+
+		}
 
 	}
 
-	if (!presentSupport){
+	if (graphicsFamily == UINT32_MAX){
 
-		printf("Graphics Queue cant present the display\n");
+		printf("No (graphics and present support) queue family  found");
 		return 1;
-
+	
 	}
 
 	printf("Graphics queue works");
+	
+	float queuePriority = 1.0f;
+
+	VkDeviceQueueCreateInfo queueCreateInfo = {
+				.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO,
+				.queueFamilyIndex = graphicsFamily,
+				.queueCount = 1,
+				.pQueuePriorities = &queuePriority
+			};
+
+	VkDeviceCreateInfo deviceCreateInfo = {
+				.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO,
+				.queueCreateInfoCount = 1,
+				.pQueueCreateInfos = &queueCreateInfo
+			};
+
+	VkDevice device;
+
+	s = vkCreateDevice(
+			Pdevice,
+			&deviceCreateInfo,
+			NULL,
+			&device
+		);
+
+	if (s != VK_SUCCESS){
+			
+		printf("Failed to create device: %d\n", s);
+		return 1;
+	
+	}
+
+	VkQueue graphicsQueue;
+
+	vkGetDeviceQueue(
+			device,
+			graphicsFamily,
+			0,
+			&graphicsQueue
+		);
+
+	if (graphicsQueue != VK_NULL_HANDLE){
+
+		printf("got graphics queue\n");
+
+	}
 
 	VkCommandPool cmdPool;
 
@@ -421,8 +415,14 @@ int main(){
 	}
 
 	vkQueueWaitIdle(graphicsQueue);
+	
+	vkDestroyCommandPool(device, cmdPool, NULL);
+	vkDestroyDevice(device, NULL);
+	vkDestroySurfaceKHR(instance, surface, NULL);
+	vkDestroyInstance(instance, NULL);
+
+	printf("Clean shutdown complete.\n");
 
 	return 0;
 
 }
-

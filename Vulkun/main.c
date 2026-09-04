@@ -17,13 +17,14 @@ int main(){
 			};
 
 	const char* extensions[] = {
-				VK_KHR_DISPLAY_EXTENSION_NAME
+				VK_KHR_DISPLAY_EXTENSION_NAME,
+				VK_KHR_SURFACE_EXTENSION_NAME
 			};
 	
 	VkInstanceCreateInfo createInfo = {
 				.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO,
 				.pApplicationInfo = &appInfo,
-				.enabledExtensionCount = 1,
+				.enabledExtensionCount = 2,
 				.ppEnabledExtensionNames = extensions
 			};
 
@@ -201,11 +202,59 @@ int main(){
 	}
 
 	printf("selected 1920x1200 @ 165Hz\n");
+	
+	uint32_t planeCount = 0;
+	s = vkGetPhysicalDeviceDisplayPlanePropertiesKHR(Pdevice, &planeCount, NULL);
+	
+	if ( s != VK_SUCCESS){
+
+		printf("Failed to get Plane count");
+		return 1;
+
+	}
+
+	printf("Plane Count: %u\n", planeCount);
+
+	uint32_t PlaneIndex = UINT32_MAX;
+	
+	for (uint32_t p = 0; p < planeCount; p++) {
+	
+		uint32_t supportedDisplayCount = 0;
+		vkGetDisplayPlaneSupportedDisplaysKHR(Pdevice, p, &supportedDisplayCount, NULL);
+
+		if (supportedDisplayCount == 0) continue;
+
+		VkDisplayKHR supportedDisplays[supportedDisplayCount];
+		vkGetDisplayPlaneSupportedDisplaysKHR(
+				Pdevice,
+				p,
+				&supportedDisplayCount,
+				supportedDisplays
+			);
+
+		for (uint32_t d = 0; d < supportedDisplayCount; d++) {
+			
+			if (supportedDisplays[d] == displays[0].display) {
+				
+				PlaneIndex = p;
+				break;
+				
+			}
+	
+		}
+		if (PlaneIndex != UINT32_MAX) break;
+	
+	}
+
+	if (PlaneIndex == UINT32_MAX) {
+		printf("No display plane supports display 0 on this GPU!\n");
+		return 1;
+	}
 
 	VkDisplaySurfaceCreateInfoKHR surfaceInfo = {
 				.sType = VK_STRUCTURE_TYPE_DISPLAY_SURFACE_CREATE_INFO_KHR,
 				.displayMode = displayMode,
-				.planeIndex = 0,
+				.planeIndex = PlaneIndex,
 				.planeStackIndex = 0,
 				.transform = VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR,
 				.globalAlpha = 1.0f,
@@ -274,7 +323,7 @@ int main(){
 
 	if (graphicsFamily == UINT32_MAX){
 
-		printf("No (graphics and present support) queue family  found");
+		printf("No (graphics and present support) queue family found");
 		return 1;
 	
 	}
@@ -389,7 +438,7 @@ int main(){
 
 	if ( s != VK_SUCCESS){
 
-		printf("failed to begin command buffer");
+		printf("failed to end command buffer");
 		return 1;
 
 	}

@@ -328,8 +328,27 @@ int main(){
 	
 	}
 
-	printf("Graphics queue works");
-	
+	printf("Graphics queue works\n");
+
+	VkSurfaceCapabilitiesKHR surfaceCapabilities;
+
+	s = vkGetPhysicalDeviceSurfaceCapabilitiesKHR(
+			Pdevice,
+			surface,
+			&surfaceCapabilities
+		);
+
+	if (s != VK_SUCCESS){
+
+		printf("Failed to get surface capabilities\n");
+		return 1;
+
+	}
+
+	printf("Min images: %u\n", surfaceCapabilities.minImageCount);
+	printf("Max images: %u\n", surfaceCapabilities.maxImageCount);
+	printf("Extent: %ux%u\n", surfaceCapabilities.currentExtent.width, surfaceCapabilities.currentExtent.height);
+
 	float queuePriority = 1.0f;
 
 	VkDeviceQueueCreateInfo queueCreateInfo = {

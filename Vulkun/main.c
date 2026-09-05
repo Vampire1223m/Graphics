@@ -339,12 +339,18 @@ int main(){
 				.pQueuePriorities = &queuePriority
 			};
 
+	VkPhysicalDeviceDynamicRenderingFeatures dynamicRendering = {
+				.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DYNAMIC_RENDERING_FEATURES,
+				.dynamicRendering = VK_TRUE
+			};
+
 	const char* deviceExtensions[] = {	
 				VK_KHR_SWAPCHAIN_EXTENSION_NAME
 			};
 
 	VkDeviceCreateInfo deviceCreateInfo = {
 				.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO,
+				.pNext = &dynamicRendering,
 				.queueCreateInfoCount = 1,
 				.pQueueCreateInfos = &queueCreateInfo,
 				.enabledExtensionCount = 1,
@@ -400,6 +406,7 @@ int main(){
 	printf("Min images: %u\n", surfaceCapabilities.minImageCount);
 	printf("Max images: %u\n", surfaceCapabilities.maxImageCount);
 	printf("Extent: %ux%u\n", surfaceCapabilities.currentExtent.width, surfaceCapabilities.currentExtent.height);
+	printf("Usage flags: 0x%x\n", surfaceCapabilities.supportedUsageFlags);
 
 	uint32_t formatCount = 0;
 
@@ -645,6 +652,8 @@ int main(){
 	}
 
 	printf("acquired image: %u\n", imageIndex);
+
+
 
 	VkCommandPool cmdPool;
 

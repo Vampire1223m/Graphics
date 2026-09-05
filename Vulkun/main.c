@@ -633,225 +633,263 @@ int main(){
 
 	}
 
-	uint32_t imageIndex;
-
-	s = vkAcquireNextImageKHR(
-			device,
-			swapchain,
-			UINT64_MAX,
-			imageAvailable,
-			VK_NULL_HANDLE,
-			&imageIndex
-		);
-
-	if ( s != VK_SUCCESS){
-
-		printf("failed to acquire sc image: %d", s);
-		return 1;
-
-	}
-
-	printf("acquired image: %u\n", imageIndex);
-
-
-
 	VkCommandPool cmdPool;
 
-	VkCommandPoolCreateInfo poolInfo = {
-				.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO,
-				.queueFamilyIndex = graphicsFamily
-			};
+	VkFenceCreateInfo fenceInfo = {
+			.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO,
+			.flags = VK_FENCE_CREATE_SIGNALED_BIT
+		};
+	VkFence inFlightFence;
 
-	s = vkCreateCommandPool(
+	s = vkCreateFence(
 			device,
-			&poolInfo,
+			&fenceInfo,
 			NULL,
-			&cmdPool
-		);
-	
-	if ( s != VK_SUCCESS){
-
-		printf("failed to create command");
-		return 1;
-
-	}
-
-	VkCommandBuffer cmdBuffer;
-
-	VkCommandBufferAllocateInfo allocInfo = {
-				.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
-				.commandPool = cmdPool,
-				.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY,
-				.commandBufferCount = 1
-			};
-
-	s = vkAllocateCommandBuffers(
-			device,
-			&allocInfo,
-			&cmdBuffer
+			&inFlightFence
 		);
 
 	if ( s != VK_SUCCESS){
 
-		printf("failed to allocate command buffer");
+		printf("failed to create fence: %d\n", s);
 		return 1;
 
 	}
 
-	VkCommandBufferBeginInfo beginInfo = {
-				.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO
-			};
+	float r = 0.0f;
 
-	s = vkBeginCommandBuffer(cmdBuffer,&beginInfo);
+	while(1){
 
-	if ( s != VK_SUCCESS){
+		vkWaitForFences(
+				device,
+				1,
+				&inFlightFence,
+				VK_TRUE,
+				UINT64_MAX
+			);
+		vkResetFences(
+				device,
+				1,
+				&inFlightFence
+			);
 
-		printf("failed to begin command buffer");
-		return 1;
+		uint32_t imageIndex;
 
-	}
+		s = vkAcquireNextImageKHR(
+				device,
+				swapchain,
+				UINT64_MAX,
+				imageAvailable,
+				VK_NULL_HANDLE,
+				&imageIndex
+			);
 
-	//
-	// cmd start
-	//
+		if ( s != VK_SUCCESS){
 
-	VkImageMemoryBarrier barrier = {
-				.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER,
-				.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED,
-				.newLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
-				.srcAccessMask = 0,
-				.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
-				.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
-				.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
-				.image = swapchainImages[imageIndex],
-				.subresourceRange = {
-						.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
-						.baseMipLevel = 0,
-						.levelCount = 1,
-						.baseArrayLayer = 0,
-						.layerCount = 1
-					}
-			};
+			printf("failed to acquire sc image: %d", s);
+			return 1;
 
-	vkCmdPipelineBarrier(
-			cmdBuffer,
-			VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
-			VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
-			0,
-			0,
-			NULL,
-			0,
-			NULL,
-			1,
-			&barrier
-		);
+		}
 
-	VkRenderingAttachmentInfo colorAttachment = {
-				.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO,
-				.imageView = imageViews[imageIndex],
-				.imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
-				.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR,
-				.storeOp = VK_ATTACHMENT_STORE_OP_STORE,
-				.clearValue = {
-						.color = {
-							.float32 = {1.0f, 0.0f, 0.0f, 1.0f}
+		printf("acquired image: %u\n", imageIndex);
+
+		VkCommandPoolCreateInfo poolInfo = {
+					.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO,
+					.queueFamilyIndex = graphicsFamily
+				};
+
+		s = vkCreateCommandPool(
+				device,
+				&poolInfo,
+				NULL,
+				&cmdPool
+			);
+		
+		if ( s != VK_SUCCESS){
+
+			printf("failed to create command");
+			return 1;
+
+		}
+
+		VkCommandBuffer cmdBuffer;
+
+		VkCommandBufferAllocateInfo allocInfo = {
+					.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
+					.commandPool = cmdPool,
+					.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY,
+					.commandBufferCount = 1
+				};
+
+		s = vkAllocateCommandBuffers(
+				device,
+				&allocInfo,
+				&cmdBuffer
+			);
+
+		if ( s != VK_SUCCESS){
+
+			printf("failed to allocate command buffer");
+			return 1;
+
+		}
+
+		VkCommandBufferBeginInfo beginInfo = {
+					.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO
+				};
+
+		s = vkBeginCommandBuffer(cmdBuffer,&beginInfo);
+
+		if ( s != VK_SUCCESS){
+
+			printf("failed to begin command buffer");
+			return 1;
+
+		}
+
+		//
+		// cmd start
+		//
+
+		VkImageMemoryBarrier barrier = {
+					.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER,
+					.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED,
+					.newLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+					.srcAccessMask = 0,
+					.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
+					.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
+					.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
+					.image = swapchainImages[imageIndex],
+					.subresourceRange = {
+							.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
+							.baseMipLevel = 0,
+							.levelCount = 1,
+							.baseArrayLayer = 0,
+							.layerCount = 1
 						}
-					}
-			};
+				};
 
-	VkRenderingInfo renderingInfo = {
-				.sType = VK_STRUCTURE_TYPE_RENDERING_INFO,
-				.renderArea = {
-						.offset = {0, 0},
-						.extent = {1920, 1200}
-					},
-				.layerCount = 1,
-				.colorAttachmentCount = 1,
-				.pColorAttachments = &colorAttachment
-			};
+		vkCmdPipelineBarrier(
+				cmdBuffer,
+				VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
+				VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+				0,
+				0,
+				NULL,
+				0,
+				NULL,
+				1,
+				&barrier
+			);
 
-	vkCmdBeginRendering(cmdBuffer, &renderingInfo);
+		r += 0.01f;
+		if (r > 1.0f) r = 0.0f;
 
-	vkCmdEndRendering(cmdBuffer);
+		VkRenderingAttachmentInfo colorAttachment = {
+					.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO,
+					.imageView = imageViews[imageIndex],
+					.imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+					.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR,
+					.storeOp = VK_ATTACHMENT_STORE_OP_STORE,
+					.clearValue = {
+							.color = {
+								.float32 = {r, 0.0f, 0.0f, 1.0f}
+							}
+						}
+				};
 
-	barrier.oldLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-	barrier.newLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
-	barrier.srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
-	barrier.dstAccessMask = 0;
+		VkRenderingInfo renderingInfo = {
+					.sType = VK_STRUCTURE_TYPE_RENDERING_INFO,
+					.renderArea = {
+							.offset = {0, 0},
+							.extent = {1920, 1200}
+						},
+					.layerCount = 1,
+					.colorAttachmentCount = 1,
+					.pColorAttachments = &colorAttachment
+				};
 
-	vkCmdPipelineBarrier(
-			cmdBuffer,
-			VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
-			VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
-			0,
-			0,
-			NULL,
-			0,
-			NULL,
-			1,
-			&barrier
-		);
+		vkCmdBeginRendering(cmdBuffer, &renderingInfo);
 
-	//
-	// cmd end
-	//
+		vkCmdEndRendering(cmdBuffer);
 
-	s = vkEndCommandBuffer(cmdBuffer);
+		barrier.oldLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+		barrier.newLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+		barrier.srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+		barrier.dstAccessMask = 0;
 
-	if ( s != VK_SUCCESS){
+		vkCmdPipelineBarrier(
+				cmdBuffer,
+				VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+				VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
+				0,
+				0,
+				NULL,
+				0,
+				NULL,
+				1,
+				&barrier
+			);
 
-		printf("failed to end command buffer");
-		return 1;
+		//
+		// cmd end
+		//
+
+		s = vkEndCommandBuffer(cmdBuffer);
+
+		if ( s != VK_SUCCESS){
+
+			printf("failed to end command buffer");
+			return 1;
+
+		}
+
+		VkPipelineStageFlags waitStage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+
+		VkSubmitInfo submitInfo = {
+					.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO,
+					.waitSemaphoreCount = 1,
+					.pWaitSemaphores = &imageAvailable,
+
+					.commandBufferCount = 1,
+					.pCommandBuffers = &cmdBuffer,
+
+					.signalSemaphoreCount = 1,
+					.pSignalSemaphores = &renderFinished
+				};
+
+		s = vkQueueSubmit(
+				graphicsQueue,
+				1,
+				&submitInfo,
+				inFlightFence
+			);
+
+		if ( s != VK_SUCCESS){
+
+			printf("failed to submit command buffer");
+			return 1;
+
+		}
+
+		VkPresentInfoKHR presentInfo = {
+					.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR,
+					.waitSemaphoreCount = 1,
+					.pWaitSemaphores = &renderFinished,
+					.swapchainCount = 1,
+					.pSwapchains = &swapchain,
+					.pImageIndices = &imageIndex
+				};
+
+		s = vkQueuePresentKHR(graphicsQueue, &presentInfo);
+
+		if ( s != VK_SUCCESS){
+
+			printf("failed to present: %d", s);
+			return 1;
+
+		}
 
 	}
-
-	VkPipelineStageFlags waitStage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-
-	VkSubmitInfo submitInfo = {
-				.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO,
-				.waitSemaphoreCount = 1,
-				.pWaitSemaphores = &imageAvailable,
-
-				.commandBufferCount = 1,
-				.pCommandBuffers = &cmdBuffer,
-
-				.signalSemaphoreCount = 1,
-				.pSignalSemaphores = &renderFinished
-			};
-
-	s = vkQueueSubmit(
-			graphicsQueue,
-			1,
-			&submitInfo,
-			VK_NULL_HANDLE
-		);
-
-	if ( s != VK_SUCCESS){
-
-		printf("failed to submit command buffer");
-		return 1;
-
-	}
-
-	VkPresentInfoKHR presentInfo = {
-				.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR,
-				.waitSemaphoreCount = 1,
-				.pWaitSemaphores = &renderFinished,
-				.swapchainCount = 1,
-				.pSwapchains = &swapchain,
-				.pImageIndices = &imageIndex
-			};
-
-	s = vkQueuePresentKHR(graphicsQueue, &presentInfo);
-
-	if ( s != VK_SUCCESS){
-
-		printf("failed to present: %d", s);
-		return 1;
-
-	}
-
-	vkQueueWaitIdle(graphicsQueue);
 	
 	vkDestroyCommandPool(device, cmdPool, NULL);
 	vkDestroyDevice(device, NULL);

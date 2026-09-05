@@ -330,25 +330,6 @@ int main(){
 
 	printf("Graphics queue works\n");
 
-	VkSurfaceCapabilitiesKHR surfaceCapabilities;
-
-	s = vkGetPhysicalDeviceSurfaceCapabilitiesKHR(
-			Pdevice,
-			surface,
-			&surfaceCapabilities
-		);
-
-	if (s != VK_SUCCESS){
-
-		printf("Failed to get surface capabilities\n");
-		return 1;
-
-	}
-
-	printf("Min images: %u\n", surfaceCapabilities.minImageCount);
-	printf("Max images: %u\n", surfaceCapabilities.maxImageCount);
-	printf("Extent: %ux%u\n", surfaceCapabilities.currentExtent.width, surfaceCapabilities.currentExtent.height);
-
 	float queuePriority = 1.0f;
 
 	VkDeviceQueueCreateInfo queueCreateInfo = {
@@ -392,6 +373,123 @@ int main(){
 	if (graphicsQueue != VK_NULL_HANDLE){
 
 		printf("got graphics queue\n");
+
+	}
+
+	VkSurfaceCapabilitiesKHR surfaceCapabilities;
+
+	s = vkGetPhysicalDeviceSurfaceCapabilitiesKHR(
+			Pdevice,
+			surface,
+			&surfaceCapabilities
+		);
+
+	if (s != VK_SUCCESS){
+
+		printf("Failed to get surface capabilities\n");
+		return 1;
+
+	}
+
+	printf("Min images: %u\n", surfaceCapabilities.minImageCount);
+	printf("Max images: %u\n", surfaceCapabilities.maxImageCount);
+	printf("Extent: %ux%u\n", surfaceCapabilities.currentExtent.width, surfaceCapabilities.currentExtent.height);
+
+	uint32_t formatCount = 0;
+
+	s = vkGetPhysicalDeviceSurfaceFormatsKHR(
+			Pdevice,
+			surface,
+			&formatCount,
+			NULL
+		);
+
+	if (s != VK_SUCCESS || formatCount == 0){
+
+		printf("Failed to get surface formats\n");
+		return 1;
+
+	}
+
+	VkSurfaceFormatKHR formats[formatCount];
+	VkSurfaceFormatKHR surfaceFormat;
+
+	s = vkGetPhysicalDeviceSurfaceFormatsKHR(
+			Pdevice,
+			surface,
+			&formatCount,
+			formats
+		);
+
+
+	if (s != VK_SUCCESS){
+
+		printf("Failed to get surface formats 2\n");
+		return 1;
+
+	}
+
+	printf("Surface formats: %u\n", formatCount);
+
+	for (uint32_t i = 0; i < formatCount; i++){
+
+		printf("Format %u: %d, Color space: %d\n", i, formats[i].format, formats[i].colorSpace);
+		
+		if (formats[i].format == VK_FORMAT_A8B8G8R8_UNORM_PACK32){
+
+			surfaceFormat = formats[i];
+			break;
+
+		}
+
+	}
+
+	uint32_t presentModeCount = 0;
+
+	s = vkGetPhysicalDeviceSurfacePresentModesKHR(
+			Pdevice,
+			surface,
+			&presentModeCount,
+			NULL
+		);
+
+	if (s != VK_SUCCESS || presentModeCount == 0){
+
+		printf("Failed to get present modes\n");
+		return 1;
+
+	}
+
+	VkPresentModeKHR presentModes[presentModeCount];
+	VkPresentModeKHR presentMode;
+
+	s = vkGetPhysicalDeviceSurfacePresentModesKHR(
+			Pdevice,
+			surface,
+			&presentModeCount,
+			presentModes
+		);
+
+
+	if (s != VK_SUCCESS){
+
+		printf("Failed to get present modes 2\n");
+		return 1;
+
+	}
+
+	printf("Present modes: %u\n", presentModeCount);
+
+	for (uint32_t i = 0; i < presentModeCount; i++){
+
+		printf("Present modes %u: %d\n", i, presentModes[i]);
+		
+		if (presentModes[i] == VK_PRESENT_MODE_FIFO_KHR){
+
+			presentMode = presentModes[i];
+			break;
+
+		}
 
 	}
 

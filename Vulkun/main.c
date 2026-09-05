@@ -553,9 +553,76 @@ int main(){
 
 	printf("Swapchain Images: %u\n", imageCount);
 
+	VkImageView imageViews[imageCount];
+
 	for (uint32_t i = 0; i < imageCount; i++){
 	
-		printf("image %u: %p\n", i, (void*)swapchainImages[i]);
+		VkImageViewCreateInfo viewInfo = {
+				.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
+				.image = swapchainImages[i],
+				.viewType = VK_IMAGE_VIEW_TYPE_2D,
+				.format = surfaceFormat.format,
+				.components = {
+						.r = VK_COMPONENT_SWIZZLE_IDENTITY,
+						.g = VK_COMPONENT_SWIZZLE_IDENTITY,
+						.b = VK_COMPONENT_SWIZZLE_IDENTITY,
+						.a = VK_COMPONENT_SWIZZLE_IDENTITY
+					},
+				.subresourceRange = {
+						.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
+						.baseMipLevel = 0,
+						.levelCount = 1,
+						.baseArrayLayer = 0,
+						.layerCount = 1
+					},
+			};
+
+		s = vkCreateImageView(
+				device,
+				&viewInfo,
+				NULL,
+				&imageViews[i]
+			);
+
+		if ( s != VK_SUCCESS){
+
+			printf("Failed to create image view %u: %d\n", i, s);
+			return 1;
+
+		}
+
+	}
+
+	VkSemaphore imageAvailable;
+	VkSemaphore renderFinished;
+
+	VkSemaphoreCreateInfo semaphoreInfo = {
+				.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO
+			};
+
+	s = vkCreateSemaphore(
+			device,
+			&semaphoreInfo,
+			NULL,
+			&imageAvailable
+		);
+	if ( s != VK_SUCCESS){
+
+		printf("failed to create image available Semaphore: %d\n", s);
+		return 1;
+
+	}
+
+	s = vkCreateSemaphore(
+			device,
+			&semaphoreInfo,
+			NULL,
+			&renderFinished
+		);
+	if ( s != VK_SUCCESS){
+
+		printf("failed to create render finished Semaphore: %d\n", s);
+		return 1;
 
 	}
 

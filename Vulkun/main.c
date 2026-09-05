@@ -626,6 +626,26 @@ int main(){
 
 	}
 
+	uint32_t imageIndex;
+
+	s = vkAcquireNextImageKHR(
+			device,
+			swapchain,
+			UINT64_MAX,
+			imageAvailable,
+			VK_NULL_HANDLE,
+			&imageIndex
+		);
+
+	if ( s != VK_SUCCESS){
+
+		printf("failed to acquire sc image: %d", s);
+		return 1;
+
+	}
+
+	printf("acquired image: %u\n", imageIndex);
+
 	VkCommandPool cmdPool;
 
 	VkCommandPoolCreateInfo poolInfo = {

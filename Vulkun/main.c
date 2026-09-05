@@ -534,6 +534,31 @@ int main(){
 
 	printf("Swapchain Created!!\n");
 
+	uint32_t imageCount = 0;
+	s = vkGetSwapchainImagesKHR(
+			device,
+			swapchain,
+			&imageCount,
+			NULL
+		);
+
+	VkImage swapchainImages[imageCount];
+
+	s = vkGetSwapchainImagesKHR(
+			device,
+			swapchain,
+			&imageCount,
+			swapchainImages
+		);
+
+	printf("Swapchain Images: %u\n", imageCount);
+
+	for (uint32_t i = 0; i < imageCount; i++){
+	
+		printf("image %u: %p\n", i, (void*)swapchainImages[i]);
+
+	}
+
 	VkCommandPool cmdPool;
 
 	VkCommandPoolCreateInfo poolInfo = {

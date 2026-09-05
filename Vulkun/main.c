@@ -18,7 +18,7 @@ int main(){
 
 	const char* extensions[] = {
 				VK_KHR_DISPLAY_EXTENSION_NAME,
-				VK_KHR_SURFACE_EXTENSION_NAME
+				VK_KHR_SURFACE_EXTENSION_NAME,
 			};
 	
 	VkInstanceCreateInfo createInfo = {
@@ -339,10 +339,16 @@ int main(){
 				.pQueuePriorities = &queuePriority
 			};
 
+	const char* deviceExtensions[] = {	
+				VK_KHR_SWAPCHAIN_EXTENSION_NAME
+			};
+
 	VkDeviceCreateInfo deviceCreateInfo = {
 				.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO,
 				.queueCreateInfoCount = 1,
-				.pQueueCreateInfos = &queueCreateInfo
+				.pQueueCreateInfos = &queueCreateInfo,
+				.enabledExtensionCount = 1,
+				.ppEnabledExtensionNames = deviceExtensions
 			};
 
 	VkDevice device;
@@ -492,6 +498,41 @@ int main(){
 		}
 
 	}
+
+	VkSwapchainCreateInfoKHR swapchainInfo = {
+				.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR,
+				.surface = surface,
+				.minImageCount = surfaceCapabilities.minImageCount,
+				.imageFormat = surfaceFormat.format,
+				.imageColorSpace = surfaceFormat.colorSpace,
+				.imageExtent = surfaceCapabilities.currentExtent,
+				.imageArrayLayers = 1,
+				.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
+				.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE,
+				.preTransform = surfaceCapabilities.currentTransform,
+				.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR,
+				.presentMode = presentMode,
+				.clipped = VK_TRUE,
+				.oldSwapchain = VK_NULL_HANDLE
+			};
+
+	VkSwapchainKHR swapchain;
+
+	s = vkCreateSwapchainKHR(
+			device,
+			&swapchainInfo,
+			NULL,
+			&swapchain
+		);
+
+	if ( s != VK_SUCCESS){
+
+		printf("failed to create swapchain: %d", s);
+		return 1;
+
+	}
+
+	printf("Swapchain Created!!\n");
 
 	VkCommandPool cmdPool;
 

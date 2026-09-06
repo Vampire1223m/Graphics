@@ -512,7 +512,7 @@ int main(){
 
 	VkPipelineColorBlendStateCreateInfo colorBlending = {
 				.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO,
-				.logicOpEnable = VK_TRUE,
+				.logicOpEnable = VK_FALSE,
 				.attachmentCount = 1,
 				.pAttachments = &colorBlendAttachment
 			};
@@ -1081,6 +1081,7 @@ int main(){
 					.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO,
 					.waitSemaphoreCount = 1,
 					.pWaitSemaphores = &imageAvailable,
+					.pWaitDstStageMask = &waitStage,
 
 					.commandBufferCount = 1,
 					.pCommandBuffers = &cmdBuffer,

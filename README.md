@@ -139,7 +139,7 @@ cd ../bin
 
 The current implementation successfully renders a Vulkan triangle directly
 to a `1920x1200 @ 165Hz` display from a Linux TTY.
-
+![My Project Screenshot](pics/triangle.png)
 ---
 
 ## Motivation

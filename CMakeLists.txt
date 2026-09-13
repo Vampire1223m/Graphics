@@ -18,20 +18,20 @@ set(SOURCES
 )
 
 add_custom_command(
-    OUTPUT "${CMAKE_SOURCE_DIR}/bin/shader.vert.spv"
-    COMMAND ${GLSLC} "${CMAKE_SOURCE_DIR}/shaders/shader.vert" -o "${CMAKE_SOURCE_DIR}/bin/shader.vert.spv"
-    DEPENDS "${CMAKE_SOURCE_DIR}/shaders/shader.vert"
+    OUTPUT "${CMAKE_SOURCE_DIR}/bin/triangle.vert.spv"
+    COMMAND ${GLSLC} "${CMAKE_SOURCE_DIR}/shaders/triangle.vert" -o "${CMAKE_SOURCE_DIR}/bin/triangle.vert.spv"
+    DEPENDS "${CMAKE_SOURCE_DIR}/shaders/triangle.vert"
 )
 
 add_custom_command(
-    OUTPUT "${CMAKE_SOURCE_DIR}/bin/shader.frag.spv"
-    COMMAND ${GLSLC} "${CMAKE_SOURCE_DIR}/shaders/shader.frag" -o "${CMAKE_SOURCE_DIR}/bin/shader.frag.spv"
-    DEPENDS "${CMAKE_SOURCE_DIR}/shaders/shader.frag"
+    OUTPUT "${CMAKE_SOURCE_DIR}/bin/triangle.frag.spv"
+    COMMAND ${GLSLC} "${CMAKE_SOURCE_DIR}/shaders/triangle.frag" -o "${CMAKE_SOURCE_DIR}/bin/triangle.frag.spv"
+    DEPENDS "${CMAKE_SOURCE_DIR}/shaders/triangle.frag"
 )
 
 add_custom_target(CompileShaders ALL DEPENDS 
-    "${CMAKE_SOURCE_DIR}/bin/shader.vert.spv" 
-    "${CMAKE_SOURCE_DIR}/bin/shader.frag.spv"
+    "${CMAKE_SOURCE_DIR}/bin/triangle.vert.spv" 
+    "${CMAKE_SOURCE_DIR}/bin/triangle.frag.spv"
 )
 
 add_executable(VulkanEngine ${SOURCES})

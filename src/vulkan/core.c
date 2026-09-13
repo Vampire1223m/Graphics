@@ -200,7 +200,7 @@ bool initVulkanDevice(VulkanCore* core, VkSurfaceKHR surface){
 
 	VkDevice device;
 
-	s = vkCreateDevice(
+	VkResult s = vkCreateDevice(
 			Pdevice,
 			&deviceCreateInfo,
 			NULL,

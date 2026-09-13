@@ -1,4 +1,5 @@
-#include "../../include/display.h"
+#include "display.h"
+#include "params.h"
 #include <stdio.h>
 #include <stdlib.h>
 

@@ -58,13 +58,13 @@ static VkShaderModule createShaderModule(VkDevice device, const char *filename){
 
 bool initVulkanPipeline(VulkanCore* core, VulkanDisplay* display, VulkanPipeline* pipeline) {
 
-    VkPhysicalDevice Pdevice = core->physicalDevice;
-    VkDevice device = core->device;
+	VkPhysicalDevice Pdevice = core->physicalDevice;
+	VkDevice device = core->device;
 
-    VkShaderModule vertexShader = createShaderModule(device, "triangle.vert.spv");
+	VkShaderModule vertexShader = createShaderModule(device, "triangle.vert.spv");
 	VkShaderModule fragmentShader = createShaderModule(device, "triangle.frag.spv");
 
-    VkPipelineShaderStageCreateInfo vertexStage = {
+	VkPipelineShaderStageCreateInfo vertexStage = {
 				.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
 				.stage = VK_SHADER_STAGE_VERTEX_BIT,
 				.module = vertexShader,
@@ -92,7 +92,7 @@ bool initVulkanPipeline(VulkanCore* core, VulkanDisplay* display, VulkanPipeline
 				.primitiveRestartEnable = VK_FALSE
 			};
 
-    VkDynamicState dynamicStates[] = {
+	VkDynamicState dynamicStates[] = {
 				VK_DYNAMIC_STATE_VIEWPORT,
 				VK_DYNAMIC_STATE_SCISSOR
 			};
@@ -103,7 +103,7 @@ bool initVulkanPipeline(VulkanCore* core, VulkanDisplay* display, VulkanPipeline
 				.pDynamicStates = dynamicStates
 			};
 
-    VkPipelineRasterizationStateCreateInfo rasterizer = {
+	VkPipelineRasterizationStateCreateInfo rasterizer = {
 				.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO,
 				.depthClampEnable = VK_FALSE,
 				.rasterizerDiscardEnable = VK_FALSE,
@@ -143,7 +143,7 @@ bool initVulkanPipeline(VulkanCore* core, VulkanDisplay* display, VulkanPipeline
 				.pPushConstantRanges = NULL
 			};
 
-    s = vkCreatePipelineLayout(
+	VkResult s = vkCreatePipelineLayout(
 			device,
 			&pipelineLayoutCreateInfo,
 			NULL,
@@ -157,10 +157,10 @@ bool initVulkanPipeline(VulkanCore* core, VulkanDisplay* display, VulkanPipeline
 
 	}
 
-    VkPipelineRenderingCreateInfo renderingInfo = {
+	VkPipelineRenderingCreateInfo renderingInfo = {
 				.sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO,
 				.colorAttachmentCount = 1,
-				.pColorAttachmentFormats = &surfaceFormat.format
+				.pColorAttachmentFormats = &display->imageFormat
 			};
 
 	VkPipelineShaderStageCreateInfo shaderStages[] = {
@@ -189,7 +189,7 @@ bool initVulkanPipeline(VulkanCore* core, VulkanDisplay* display, VulkanPipeline
 			.pNext = &renderingInfo
 		};
 
-    s = vkCreateGraphicsPipelines(
+	s = vkCreateGraphicsPipelines(
 			device,
 			VK_NULL_HANDLE,
 			1,
@@ -205,18 +205,21 @@ bool initVulkanPipeline(VulkanCore* core, VulkanDisplay* display, VulkanPipeline
 
 	}
 
-    vkDestroyShaderModule(device, vertexShader, NULL);
-    vkDestroyShaderModule(device, fragmentShader, NULL);
+	vkDestroyShaderModule(device, vertexShader, NULL);
+	vkDestroyShaderModule(device, fragmentShader, NULL);
 
-    return true;
+	return true;
 
 }
 
 void cleanupVulkanPipeline(VulkanCore* core, VulkanPipeline* pipeline) {
-    if (pipeline->graphicsPipeline) {
-        vkDestroyPipeline(core->device, pipeline->graphicsPipeline, NULL);
-    }
-    if (pipeline->pipelineLayout) {
-        vkDestroyPipelineLayout(core->device, pipeline->pipelineLayout, NULL);
-    }
+
+	if (pipeline->graphicsPipeline) {
+		vkDestroyPipeline(core->device, pipeline->graphicsPipeline, NULL);
+	}
+
+	if (pipeline->pipelineLayout) {
+        	vkDestroyPipelineLayout(core->device, pipeline->pipelineLayout, NULL);
+	}
+
 }

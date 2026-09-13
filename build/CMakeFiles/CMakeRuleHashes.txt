@@ -1,0 +1,4 @@
+# Hashes of file build rules.
+d3a074cfd839039c6292aa2a281165f3 /home/March/cpp/bin/triangle.frag.spv
+a6691e5b3ab63f17ecc769d77990e073 /home/March/cpp/bin/triangle.vert.spv
+9c1b9994a6797f4ab40d001eb518a47f CMakeFiles/CompileShaders

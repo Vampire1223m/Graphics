@@ -1,1 +1,0 @@
-/usr/bin/cc -Wl,--dependency-file=CMakeFiles/DumbDrm.dir/link.d CMakeFiles/DumbDrm.dir/src/drm/dumbdrm.c.o -o DumbDrm

@@ -1,5 +1,0 @@
-/home/March/cpp/build/CMakeFiles/CompileShaders.dir
-/home/March/cpp/build/CMakeFiles/VulkanEngine.dir
-/home/March/cpp/build/CMakeFiles/DumbDrm.dir
-/home/March/cpp/build/CMakeFiles/edit_cache.dir
-/home/March/cpp/build/CMakeFiles/rebuild_cache.dir

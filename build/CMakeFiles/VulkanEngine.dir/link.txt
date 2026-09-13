@@ -1,1 +1,0 @@
-/usr/bin/cc -Wl,--dependency-file=CMakeFiles/VulkanEngine.dir/link.d CMakeFiles/VulkanEngine.dir/src/vulkan/main.c.o CMakeFiles/VulkanEngine.dir/src/vulkan/core.c.o CMakeFiles/VulkanEngine.dir/src/vulkan/display.c.o CMakeFiles/VulkanEngine.dir/src/vulkan/pipeline.c.o CMakeFiles/VulkanEngine.dir/src/vulkan/renderer.c.o -o /home/March/cpp/bin/VulkanEngine  /usr/lib/libvulkan.so

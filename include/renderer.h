@@ -12,6 +12,8 @@ typedef struct {
     VkSemaphore imageAvailable;
     VkSemaphore renderFinished;
     VkFence inFlightFence;
+    VkBuffer vertexBuffer;
+    VkDeviceMemory vertexMemory;
 } VulkanRenderer;
 
 bool initVulkanRenderer(VulkanCore* core, VulkanRenderer* renderer);

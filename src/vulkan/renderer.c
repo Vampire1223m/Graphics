@@ -1,4 +1,5 @@
 #include "renderer.h"
+#include "vertices.h"
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -53,6 +54,111 @@ bool initVulkanRenderer(VulkanCore* core, VulkanRenderer* renderer) {
 		return false;
 
 	}
+
+    VkBufferCreateInfo bufferInfo = {
+                .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
+                .size = sizeof(vertices),
+                .usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+                .sharingMode = VK_SHARING_MODE_EXCLUSIVE
+            };
+    s = vkCreateBuffer(
+            device,
+            &bufferInfo,
+            NULL,
+            &renderer->vertexBuffer
+        );
+    if ( s != VK_SUCCESS){
+
+		printf("failed to vertex Buffer: %d\n", s);
+		return false;
+
+	}
+
+    VkMemoryRequirements memRequirements;
+
+    vkGetBufferMemoryRequirements(
+                device,
+                renderer->vertexBuffer,
+                &memRequirements
+            );
+
+    VkPhysicalDeviceMemoryProperties memoryProperties;
+
+    vkGetPhysicalDeviceMemoryProperties(
+                Pdevice,
+                &memoryProperties
+            );
+
+    uint32_t memoryTypeIndex;
+
+    for (uint32_t i = 0; i < memoryProperties.memoryTypeCount; i++)
+    {
+        if ((memRequirements.memoryTypeBits & (1 << i)) && 
+            (memoryProperties.memoryTypes[i].propertyFlags & VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT) && 
+            (memoryProperties.memoryTypes[i].propertyFlags & VK_MEMORY_PROPERTY_HOST_COHERENT_BIT)))
+        {
+            memoryTypeIndex = i;
+            break;
+        }
+        
+    }
+    
+    VkMemoryAllocateInfo allocInfo = {
+                .sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO,
+                .allocationSize = memRequirements.size,
+                .memoryTypeIndex = memoryTypeIndex
+            };
+
+    s = vkAllocateMemory(
+            device,
+            &allocInfo,
+            NULL,
+            &renderer->vertexMemory
+        );
+    if ( s != VK_SUCCESS){
+
+		printf("failed to allocate vertex memory: %d\n", s);
+		return false;
+
+	}
+
+    s = vkBindBufferMemory(
+        device,
+        renderer->vertexBuffer,
+        renderer->vertexMemory,
+        0
+    );
+    if ( s != VK_SUCCESS){
+
+		printf("failed to bind vertex memory: %d\n", s);
+		return false;
+
+	}
+
+    void *data;
+
+    s = vkMapMemory(
+        device,
+        renderer->vertexMemory,
+        0,
+        sizeof(vertices),
+        0,
+        &data
+    );
+    if ( s != VK_SUCCESS){
+
+		printf("failed to map vertex memory: %d\n", s);
+		return false;
+
+	}
+
+    memcpy(
+        data,
+        triangleVertices,
+        sizeof(triangleVertices)
+    );
+
+    vkUnmapMemory(device, vertexMemory);
 
     VkCommandPoolCreateInfo poolInfo = {
                 .sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO,
@@ -237,6 +343,16 @@ bool drawFrame(VulkanCore* core, VulkanDisplay* display, VulkanPipeline* pipelin
 
     vkCmdDraw(cmdBuffer, 3, 1, 0, 0);
 
+    VkDeviceSize vertexOffset = 0;
+
+    vkCmdBindVertexBuffers(
+        cmdBuffer,
+        0,
+        1,
+        &renderer->vertexBuffer,
+        &vertexOffset
+    );
+
     //
     // Cmd Rendering End
     //
@@ -334,9 +450,9 @@ void cleanupVulkanRenderer(VulkanCore* core, VulkanRenderer* renderer) {
     if (renderer->imageAvailable) vkDestroySemaphore(device, renderer->imageAvailable, NULL);
     if (renderer->renderFinished) vkDestroySemaphore(device, renderer->renderFinished, NULL);
     if (renderer->inFlightFence) vkDestroyFence(device, renderer->inFlightFence, NULL);
+
+    if (renderer->vertexBuffer) vkDestroyBuffer(device, renderer->vertexBuffer, NULL);
+    if (renderer->vertexMemory) vkFreeMemory(device, renderer->vertexMemory, NULL);
     
-    if (renderer->cmdPool) {
-        // Destroying the command pool automatically frees the command buffers allocated from it
-        vkDestroyCommandPool(device, renderer->cmdPool, NULL);
-    }
+    if (renderer->cmdPool) vkDestroyCommandPool(device, renderer->cmdPool, NULL);
 }

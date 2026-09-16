@@ -143,7 +143,7 @@ bool initVulkanRenderer(VulkanCore* core, VulkanRenderer* renderer) {
         device,
         renderer->vertexMemory,
         0,
-        sizeof(Vertex)*verticescount,
+        sizeof(Vertex)*verticesCount,
         0,
         &data
     );
@@ -157,14 +157,14 @@ bool initVulkanRenderer(VulkanCore* core, VulkanRenderer* renderer) {
     memcpy(
         data,
         vertices,
-        sizeof(Vertex)*verticescount
+        sizeof(Vertex)*verticesCount
     );
 
     vkUnmapMemory(device, renderer->vertexMemory);
 
     VkBufferCreateInfo iBufferInfo = {
                 .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
-                .size = 6,
+                .size = indicesCount,
                 .usage = VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
                 .sharingMode = VK_SHARING_MODE_EXCLUSIVE
             };
@@ -245,7 +245,7 @@ bool initVulkanRenderer(VulkanCore* core, VulkanRenderer* renderer) {
         device,
         renderer->indexMemory,
         0,
-        6,
+        indicesCount,
         0,
         &iData
     );
@@ -259,7 +259,7 @@ bool initVulkanRenderer(VulkanCore* core, VulkanRenderer* renderer) {
     memcpy(
         data,
         vertices,
-        6
+        indicesCount
     );
 
     vkUnmapMemory(device, renderer->indexMemory);

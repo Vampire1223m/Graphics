@@ -23,10 +23,11 @@ const Vertex vertices[] = {
     }
 };
 
-const uint32_t verticescount = sizeof(vertices);
-const uint32_t indicesCount = 6;
+const uint32_t verticesCount = sizeof(vertices);
 
 const uint32_t indices[] = {
     0,1,2,
     0,1,3
 };
+
+const uint32_t indicesCount = sizeof(indices);

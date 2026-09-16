@@ -6,6 +6,7 @@
 
 extern const Vertex vertices[];
 extern const uint32_t indices[];
-extern const uint32_t verticescount;
+extern const uint32_t verticesCount;
+extern const uint32_t indicesCount;
 
 #endif

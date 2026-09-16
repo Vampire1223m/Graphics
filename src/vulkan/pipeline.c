@@ -1,4 +1,5 @@
 #include "pipeline.h"
+#include "vertex.h"
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -78,12 +79,39 @@ bool initVulkanPipeline(VulkanCore* core, VulkanDisplay* display, VulkanPipeline
 				.pName = "main"
 			};
 
+	VkVertexBindingDescription vertexBinding = {
+				.binding = 0,
+				.stride = sizeof(Vertex),
+				.inputRate = VK_VERTEX_INPUT_RATE_VERTEX	
+			};
+
+	VkVertexInputAttributeDescription vertexAttribute[] = {
+				{
+					.location = 0,
+					.binding = 0,
+					.format = VK_FORMAT_R32G32_SFLOAT,
+					.offset = offsetof(Vertex, position)
+				},
+				{
+					.location = 1,
+					.binding = 0,
+					.format = VK_FORMAT_R32G32B32_SFLOAT,
+					.offset = offsetof(Vertex, color)
+				},
+				{
+					.location = 2,
+					.binding = 0,
+					.format = VK_FORMAT_R32G32B32_SFLOAT,
+					.offset = offsetof(Vertex, opt)
+				}
+			};
+
 	VkPipelineVertexInputStateCreateInfo vertexInput = {
 				.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO,
-				.vertexBindingDescriptionCount = 0,
-				.pVertexBindingDescriptions = NULL,
-				.vertexAttributeDescriptionCount = 0,
-				.pVertexAttributeDescriptions = NULL
+				.vertexBindingDescriptionCount = 1,
+				.pVertexBindingDescriptions = &vertexBinding,
+				.vertexAttributeDescriptionCount = 3,
+				.pVertexAttributeDescriptions = &vertexAttribute
 			};
 
 	VkPipelineInputAssemblyStateCreateInfo inputAssembly = {

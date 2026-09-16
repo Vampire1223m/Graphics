@@ -8,6 +8,8 @@ bool initVulkanRenderer(VulkanCore* core, VulkanRenderer* renderer) {
 
     VkDevice device = core->device;
 
+    drawPentagon(0, 0, 600, &vertices);
+
     VkSemaphoreCreateInfo semaphoreInfo = {
 				.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO
 			};
@@ -58,7 +60,7 @@ bool initVulkanRenderer(VulkanCore* core, VulkanRenderer* renderer) {
 
     VkBufferCreateInfo bufferInfo = {
                 .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
-                .size = sizeof(Vertex)*verticescount,
+                .size = sizeof(Vertex)*verticesCount,
                 .usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
                 .sharingMode = VK_SHARING_MODE_EXCLUSIVE
             };
@@ -143,7 +145,7 @@ bool initVulkanRenderer(VulkanCore* core, VulkanRenderer* renderer) {
         device,
         renderer->vertexMemory,
         0,
-        sizeof(Vertex)*verticescount,
+        sizeof(Vertex)*verticesCount,
         0,
         &data
     );
@@ -157,7 +159,7 @@ bool initVulkanRenderer(VulkanCore* core, VulkanRenderer* renderer) {
     memcpy(
         data,
         vertices,
-        sizeof(Vertex)*verticescount
+        sizeof(Vertex)*verticesCount
     );
 
     vkUnmapMemory(device, renderer->vertexMemory);

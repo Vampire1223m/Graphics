@@ -5,6 +5,6 @@
 #include <stdint.h>
 
 extern const Vertex vertices[];
-extern const uint32_t verticesCount;
+extern const uint32_t verticescount;
 
 #endif

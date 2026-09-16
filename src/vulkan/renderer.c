@@ -162,6 +162,95 @@ bool initVulkanRenderer(VulkanCore* core, VulkanRenderer* renderer) {
 
     vkUnmapMemory(device, renderer->vertexMemory);
 
+    VkBufferCreateInfo bufferInfo = {
+                .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
+                .size = sizeof(indices),
+                .usage = VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
+                .sharingMode = VK_SHARING_MODE_EXCLUSIVE
+            };
+    s = vkCreateBuffer(
+            device,
+            &bufferInfo,
+            NULL,
+            &renderer->indexBuffer
+        );
+    if ( s != VK_SUCCESS){
+
+		printf("failed to index Buffer: %d\n", s);
+		return false;
+
+	}
+
+    VkMemoryRequirements memRequirements;
+
+    vkGetBufferMemoryRequirements(
+                device,
+                renderer->indexBuffer,
+                &memRequirements
+            );
+
+    vkGetPhysicalDeviceMemoryProperties(
+                core->physicalDevice,
+                &memoryProperties
+            );
+
+    for (uint32_t i = 0; i < memoryProperties.memoryTypeCount; i++)
+    {
+        if ((memRequirements.memoryTypeBits & (1 << i)) && 
+            (memoryProperties.memoryTypes[i].propertyFlags & VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT) && 
+            (memoryProperties.memoryTypes[i].propertyFlags & VK_MEMORY_PROPERTY_HOST_COHERENT_BIT)){
+
+            memoryTypeIndex = i;
+            break;
+
+        }
+        
+    }
+    
+    VkMemoryAllocateInfo vAllocInfo = {
+                .sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO,
+                .allocationSize = memRequirements.size,
+                .memoryTypeIndex = memoryTypeIndex
+            };
+
+    s = vkAllocateMemory(
+            device,
+            &vAllocInfo,
+            NULL,
+            &renderer->indexMemory
+        );
+    if ( s != VK_SUCCESS){
+
+		printf("failed to allocate index memory: %d\n", s);
+		return false;
+
+	}
+
+    void *data;
+
+    s = vkMapMemory(
+        device,
+        renderer->indexMemory,
+        0,
+        sizeof(indices),
+        0,
+        &data
+    );
+    if ( s != VK_SUCCESS){
+
+		printf("failed to map index memory: %d\n", s);
+		return false;
+
+	}
+
+    memcpy(
+        data,
+        vertices,
+        sizeof(indices)
+    );
+
+    vkUnmapMemory(device, renderer->indexMemory);
+
     VkCommandPoolCreateInfo poolInfo = {
                 .sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO,
                 .queueFamilyIndex = core->graphicsFamily
@@ -328,6 +417,19 @@ bool drawFrame(VulkanCore* core, VulkanDisplay* display, VulkanPipeline* pipelin
             pipeline->graphicsPipeline
         );
 
+    s = vkBindIndexBufferMemory(
+        renderer->cmdBuffer,
+        renderer->indexBuffer,
+        0,
+        VK_INDEX_TYPE_UINT32
+    );
+    if ( s != VK_SUCCESS){
+
+		printf("failed to bind index memory: %d\n", s);
+		return false;
+
+	}
+
     VkViewport viewport = {
             .x = 0.0f, .y = 0.0f,
             .width = (float)display->extent.width,
@@ -343,7 +445,7 @@ bool drawFrame(VulkanCore* core, VulkanDisplay* display, VulkanPipeline* pipelin
     vkCmdSetViewport(cmdBuffer, 0, 1, &viewport);
     vkCmdSetScissor(cmdBuffer, 0, 1, &scissor);
 
-    vkCmdDraw(cmdBuffer, 3, 1, 0, 0);
+    vkCmdDrawIndexed(cmdBuffer, 6, 1, 0, 0);
 
     VkDeviceSize vertexOffset = 0;
 
@@ -456,5 +558,8 @@ void cleanupVulkanRenderer(VulkanCore* core, VulkanRenderer* renderer) {
     if (renderer->vertexBuffer) vkDestroyBuffer(device, renderer->vertexBuffer, NULL);
     if (renderer->vertexMemory) vkFreeMemory(device, renderer->vertexMemory, NULL);
     
+    if (renderer->indexBuffer) vkDestroyBuffer(device, renderer->indexBuffer, NULL);
+    if (renderer->indexMemory) vkFreeMemory(device, renderer->indexMemory, NULL);
+
     if (renderer->cmdPool) vkDestroyCommandPool(device, renderer->cmdPool, NULL);
 }

@@ -14,6 +14,8 @@ typedef struct {
     VkFence inFlightFence;
     VkBuffer vertexBuffer;
     VkDeviceMemory vertexMemory;
+    VkBuffer indexBuffer;
+    VkDeviceMemory indexMemory;
 } VulkanRenderer;
 
 bool initVulkanRenderer(VulkanCore* core, VulkanRenderer* renderer);

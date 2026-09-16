@@ -79,7 +79,7 @@ bool initVulkanPipeline(VulkanCore* core, VulkanDisplay* display, VulkanPipeline
 				.pName = "main"
 			};
 
-	VkVertexBindingDescription vertexBinding = {
+	VkVertexInputBindingDescription vertexBinding = {
 				.binding = 0,
 				.stride = sizeof(Vertex),
 				.inputRate = VK_VERTEX_INPUT_RATE_VERTEX	
@@ -111,7 +111,7 @@ bool initVulkanPipeline(VulkanCore* core, VulkanDisplay* display, VulkanPipeline
 				.vertexBindingDescriptionCount = 1,
 				.pVertexBindingDescriptions = &vertexBinding,
 				.vertexAttributeDescriptionCount = 3,
-				.pVertexAttributeDescriptions = &vertexAttribute
+				.pVertexAttributeDescriptions = vertexAttribute
 			};
 
 	VkPipelineInputAssemblyStateCreateInfo inputAssembly = {

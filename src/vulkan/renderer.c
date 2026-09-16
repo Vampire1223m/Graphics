@@ -2,6 +2,7 @@
 #include "vertices.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 bool initVulkanRenderer(VulkanCore* core, VulkanRenderer* renderer) {
 
@@ -57,7 +58,7 @@ bool initVulkanRenderer(VulkanCore* core, VulkanRenderer* renderer) {
 
     VkBufferCreateInfo bufferInfo = {
                 .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
-                .size = sizeof(vertices),
+                .size = sizeof(Vertex)*verticescount,
                 .usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
                 .sharingMode = VK_SHARING_MODE_EXCLUSIVE
             };
@@ -85,7 +86,7 @@ bool initVulkanRenderer(VulkanCore* core, VulkanRenderer* renderer) {
     VkPhysicalDeviceMemoryProperties memoryProperties;
 
     vkGetPhysicalDeviceMemoryProperties(
-                Pdevice,
+                core->physicalDevice,
                 &memoryProperties
             );
 
@@ -95,15 +96,16 @@ bool initVulkanRenderer(VulkanCore* core, VulkanRenderer* renderer) {
     {
         if ((memRequirements.memoryTypeBits & (1 << i)) && 
             (memoryProperties.memoryTypes[i].propertyFlags & VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT) && 
-            (memoryProperties.memoryTypes[i].propertyFlags & VK_MEMORY_PROPERTY_HOST_COHERENT_BIT)))
-        {
+            (memoryProperties.memoryTypes[i].propertyFlags & VK_MEMORY_PROPERTY_HOST_COHERENT_BIT)){
+
             memoryTypeIndex = i;
             break;
+
         }
         
     }
     
-    VkMemoryAllocateInfo allocInfo = {
+    VkMemoryAllocateInfo vAllocInfo = {
                 .sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO,
                 .allocationSize = memRequirements.size,
                 .memoryTypeIndex = memoryTypeIndex
@@ -111,7 +113,7 @@ bool initVulkanRenderer(VulkanCore* core, VulkanRenderer* renderer) {
 
     s = vkAllocateMemory(
             device,
-            &allocInfo,
+            &vAllocInfo,
             NULL,
             &renderer->vertexMemory
         );
@@ -141,7 +143,7 @@ bool initVulkanRenderer(VulkanCore* core, VulkanRenderer* renderer) {
         device,
         renderer->vertexMemory,
         0,
-        sizeof(vertices),
+        sizeof(Vertex)*verticescount,
         0,
         &data
     );
@@ -154,11 +156,11 @@ bool initVulkanRenderer(VulkanCore* core, VulkanRenderer* renderer) {
 
     memcpy(
         data,
-        triangleVertices,
-        sizeof(triangleVertices)
+        vertices,
+        sizeof(Vertex)*verticescount
     );
 
-    vkUnmapMemory(device, vertexMemory);
+    vkUnmapMemory(device, renderer->vertexMemory);
 
     VkCommandPoolCreateInfo poolInfo = {
                 .sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO,

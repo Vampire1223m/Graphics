@@ -1,4 +1,5 @@
 #include "vertices.h"
+#include <strings.h>
 
 const Vertex vertices[] = {
     {
@@ -25,9 +26,10 @@ const Vertex vertices[] = {
 
 const uint32_t verticesCount = sizeof(vertices)/sizeof(Vertex);
 
-Vertex frameVertices[verticesCount];
+Vertex frameVertices[4];
 
-frameVertices = vertices;
+//frameVertices = vertices;
+
 
 const uint32_t indices[] = {
     0,1,2,

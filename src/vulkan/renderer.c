@@ -160,6 +160,12 @@ bool initVulkanRenderer(VulkanCore* core, VulkanRenderer* renderer) {
         sizeof(Vertex)*verticesCount
     );
 
+    memcpy(
+	frameVertices,
+	vertices,
+	sizeof(Vertex)*verticesCount
+    );
+
     vkUnmapMemory(device, renderer->vertexMemory);
 
     VkBufferCreateInfo iBufferInfo = {
@@ -344,7 +350,7 @@ bool drawFrame(VulkanCore* core, VulkanDisplay* display, VulkanPipeline* pipelin
 
     // printf("acquired image: %u\n", imageIndex);
 
-    frameVertices[0].position[0] += 0.01f
+    frameVertices[0].position[0] += 0.01f;
 
     void *iData;
 

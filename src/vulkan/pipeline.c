@@ -268,7 +268,11 @@ void cleanupVulkanPipeline(VulkanCore* core, VulkanPipeline* pipeline) {
 	}
 
 	if (pipeline->pipelineLayout) {
-        	vkDestroyPipelineLayout(core->device, pipeline->pipelineLayout, NULL);
+        vkDestroyPipelineLayout(core->device, pipeline->pipelineLayout, NULL);
+	}
+
+	if (pipeline->descriptorSetLayout) {
+		vkDestroyDescriptorSetLayout(core->device, pipeline->descriptorSetLayout, NULL);
 	}
 
 }

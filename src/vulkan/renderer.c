@@ -513,15 +513,15 @@ bool drawFrame(VulkanCore* core, VulkanDisplay* display, VulkanPipeline* pipelin
 
     s = vkMapMemory(
         device,
-        renderer->vertexMemory,
+        renderer->indexMemory,
         0,
-        sizeof(Vertex)*verticesCount,
+        sizeof(uint32_t)*indicesCount,
         0,
         &iData
     );
     if ( s != VK_SUCCESS){
 
-		printf("failed to remap vertex memory: %d\n", s);
+		printf("failed to remap index memory: %d\n", s);
 		return false;
 
 	}
@@ -529,16 +529,16 @@ bool drawFrame(VulkanCore* core, VulkanDisplay* display, VulkanPipeline* pipelin
     memcpy(
         iData,
         frameVertices,
-        sizeof(Vertex)*verticesCount
+        sizeof(uint32_t)*indicesCount
     );
 
-    vkUnmapMemory(device, renderer->vertexMemory);
+    vkUnmapMemory(device, renderer->indexMemory);
 
     void *bData;
 
     s = vkMapMemory(
         device,
-        renderer->vertexMemory,
+        renderer->uniformMemory,
         0,
         sizeof(uniformBufferObj),
         0,
@@ -553,11 +553,11 @@ bool drawFrame(VulkanCore* core, VulkanDisplay* display, VulkanPipeline* pipelin
 
     memcpy(
         bData,
-        frameVertices,
+        ubo,
         sizeof(uniformBufferObj)
     );
 
-    vkUnmapMemory(device, renderer->vertexMemory);
+    vkUnmapMemory(device, renderer->uniformMemory);
 
     vkResetCommandBuffer(cmdBuffer, 0);
 
@@ -688,7 +688,7 @@ bool drawFrame(VulkanCore* core, VulkanDisplay* display, VulkanPipeline* pipelin
     vkCmdSetViewport(cmdBuffer, 0, 1, &viewport);
     vkCmdSetScissor(cmdBuffer, 0, 1, &scissor);
 
-    vkCmdDrawIndexed(cmdBuffer, 6, 1, 0, 0, 0);
+    vkCmdDrawIndexed(cmdBuffer, indicesCount, 1, 0, 0, 0);
 
     //
     // Cmd Rendering End
@@ -793,6 +793,11 @@ void cleanupVulkanRenderer(VulkanCore* core, VulkanRenderer* renderer) {
     
     if (renderer->indexBuffer) vkDestroyBuffer(device, renderer->indexBuffer, NULL);
     if (renderer->indexMemory) vkFreeMemory(device, renderer->indexMemory, NULL);
+
+    if (renderer->descriptorPool) vkDestroyDescriptorPool(device, renderer->descriptorPool, NULL);
+    if (renderer->uniformBuffer) vkDestroyBuffer(device, renderer->uniformBuffer, NULL);
+    if (renderer->uniformMemory) vkFreeMemory(device, renderer->uniformMemory, NULL);
+
 
     if (renderer->cmdPool) vkDestroyCommandPool(device, renderer->cmdPool, NULL);
 }

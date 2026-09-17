@@ -20,7 +20,7 @@ int main(){
 
 	printf("INIT success!!\n");
 
-	for (int i = 0; i < 1000; i++) {
+	for (int i = 0; i < 5000; i++) {
 
 		bool s = drawFrame(&core, &display, &pipeline, &renderer);
         if (!s) {

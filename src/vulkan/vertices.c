@@ -23,11 +23,15 @@ const Vertex vertices[] = {
     }
 };
 
-const uint32_t verticesCount = sizeof(vertices);
+const uint32_t verticesCount = sizeof(vertices)/sizeof(Vertex);
+
+Vertex frameVertices[verticesCount];
+
+frameVertices = vertices;
 
 const uint32_t indices[] = {
     0,1,2,
     0,1,3
 };
 
-const uint32_t indicesCount = sizeof(indices);
+const uint32_t indicesCount = sizeof(indices)/sizeof(uint32_t);

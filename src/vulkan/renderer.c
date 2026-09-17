@@ -342,9 +342,36 @@ bool drawFrame(VulkanCore* core, VulkanDisplay* display, VulkanPipeline* pipelin
 
     }
 
-    vkResetCommandBuffer(cmdBuffer, 0);
-
     // printf("acquired image: %u\n", imageIndex);
+
+    frameVertices[0].position[0] += 0.01f
+
+    void *iData;
+
+    s = vkMapMemory(
+        device,
+        renderer->vertexMemory,
+        0,
+        sizeof(Vertex)*verticesCount,
+        0,
+        &iData
+    );
+    if ( s != VK_SUCCESS){
+
+		printf("failed to remap vertex memory: %d\n", s);
+		return false;
+
+	}
+
+    memcpy(
+        iData,
+        frameVertices,
+        sizeof(Vertex)*verticesCount
+    );
+
+    vkUnmapMemory(device, renderer->vertexMemory);
+
+    vkResetCommandBuffer(cmdBuffer, 0);
 
     VkCommandBufferBeginInfo beginInfo = {
                 .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO

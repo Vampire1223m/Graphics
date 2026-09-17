@@ -100,13 +100,6 @@ bool initVulkanPipeline(VulkanCore* core, VulkanDisplay* display, VulkanPipeline
 			&pipeline->descriptorSetLayout
 		);
 
-	s = vkCreatePipelineLayout(
-			device,
-			&pipelineLayoutCreateInfo,
-			NULL,
-			&pipeline->pipelineLayout
-		);
-
 	if (s != VK_SUCCESS){
 
 		printf("Failed to create pipeline layout");
@@ -205,6 +198,13 @@ bool initVulkanPipeline(VulkanCore* core, VulkanDisplay* display, VulkanPipeline
 				.pushConstantRangeCount = 0,
 				.pPushConstantRanges = NULL
 			};
+
+	s = vkCreatePipelineLayout(
+			device,
+			&pipelineLayoutCreateInfo,
+			NULL,
+			&pipeline->pipelineLayout
+		);
 
 	VkPipelineRenderingCreateInfo renderingInfo = {
 				.sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO,

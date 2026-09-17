@@ -273,7 +273,7 @@ bool initVulkanRenderer(VulkanCore* core, VulkanRenderer* renderer, VulkanPipeli
     VkBufferCreateInfo bBufferInfo = {
                 .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
                 .size = sizeof(uniformBufferObj),
-                .usage = VK_BUFFER_USAGE_UINIFORM_BUFFER_BIT,
+                .usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
                 .sharingMode = VK_SHARING_MODE_EXCLUSIVE
             };
     s = vkCreateBuffer(
@@ -325,7 +325,7 @@ bool initVulkanRenderer(VulkanCore* core, VulkanRenderer* renderer, VulkanPipeli
             device,
             &bAllocInfo,
             NULL,
-            &renderer->bufferMemory
+            &renderer->uniformMemory
         );
     if ( s != VK_SUCCESS){
 
@@ -366,21 +366,21 @@ bool initVulkanRenderer(VulkanCore* core, VulkanRenderer* renderer, VulkanPipeli
 
     memcpy(
         bData,
-        ubo,
+        &ubo,
         sizeof(uniformBufferObj)
     );
 
     vkUnmapMemory(device, renderer->uniformMemory);
 
     VkDescriptorPoolSize dPoolSize = {
-                .sType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+                .type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
                 .descriptorCount = 1
             };
 
     VkDescriptorPoolCreateInfo dPoolInfo = {
                 .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO,
                 .poolSizeCount = 1,
-                .pPoolSizes = &dPoolsize,
+                .pPoolSizes = &dPoolSize,
                 .maxSets = 1
             };
 
@@ -393,7 +393,7 @@ bool initVulkanRenderer(VulkanCore* core, VulkanRenderer* renderer, VulkanPipeli
 
     VkDescriptorSetAllocateInfo dAllocInfo = {
                 .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO,
-                .descriptorPool = &renderer->descriptorPool,
+                .descriptorPool = renderer->descriptorPool,
                 .descriptorSetCount = 1,
                 .pSetLayouts = &pipeline->descriptorSetLayout
             };
@@ -405,7 +405,7 @@ bool initVulkanRenderer(VulkanCore* core, VulkanRenderer* renderer, VulkanPipeli
         );
 
     VkDescriptorBufferInfo dBufferInfo = {
-                .buffer = renderer->unifromBuffer,
+                .buffer = renderer->uniformBuffer,
                 .offset = 0,
                 .range = sizeof(uniformBufferObj)
             };
@@ -413,10 +413,10 @@ bool initVulkanRenderer(VulkanCore* core, VulkanRenderer* renderer, VulkanPipeli
     VkWriteDescriptorSet descriptorWrite = {
                 .sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
                 .dstSet = renderer->descriptorSet,
-                .dstArreyElement = 0,
+                .dstArrayElement = 0,
                 .descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
                 .descriptorCount = 1,
-                .pBufferInfo = &bufferInfo
+                .pBufferInfo = &dBufferInfo
             };
 
     vkUpdateDescriptorSets(

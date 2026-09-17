@@ -161,15 +161,9 @@ bool initVulkanRenderer(VulkanCore* core, VulkanRenderer* renderer, VulkanPipeli
     );
 
     memcpy(
-	frameVertices,
-	vertices,
-	sizeof(Vertex)*verticesCount
-    );
-
-    memcpy(
-	frameVertices,
-	vertices,
-	sizeof(Vertex)*verticesCount
+        frameVertices,
+        vertices,
+        sizeof(Vertex)*verticesCount
     );
 
     vkUnmapMemory(device, renderer->vertexMemory);

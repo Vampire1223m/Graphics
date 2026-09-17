@@ -58,7 +58,7 @@ bool initVulkanRenderer(VulkanCore* core, VulkanRenderer* renderer) {
 
     VkBufferCreateInfo bufferInfo = {
                 .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
-                .size = sizeof(Vertex)*verticescount,
+                .size = sizeof(Vertex)*verticesCount,
                 .usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
                 .sharingMode = VK_SHARING_MODE_EXCLUSIVE
             };
@@ -196,7 +196,7 @@ bool initVulkanRenderer(VulkanCore* core, VulkanRenderer* renderer) {
 
     for (uint32_t i = 0; i < memoryProperties.memoryTypeCount; i++)
     {
-        if ((memRequirements.memoryTypeBits & (1 << i)) && 
+        if ((iMemRequirements.memoryTypeBits & (1 << i)) && 
             (memoryProperties.memoryTypes[i].propertyFlags & VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT) && 
             (memoryProperties.memoryTypes[i].propertyFlags & VK_MEMORY_PROPERTY_HOST_COHERENT_BIT)){
 
@@ -209,7 +209,7 @@ bool initVulkanRenderer(VulkanCore* core, VulkanRenderer* renderer) {
     
     VkMemoryAllocateInfo iAllocInfo = {
                 .sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO,
-                .allocationSize = memRequirements.size,
+                .allocationSize = iMemRequirements.size,
                 .memoryTypeIndex = memoryTypeIndex
             };
 
@@ -257,7 +257,7 @@ bool initVulkanRenderer(VulkanCore* core, VulkanRenderer* renderer) {
 	}
 
     memcpy(
-        data,
+        iData,
         vertices,
         indicesCount
     );
@@ -430,6 +430,16 @@ bool drawFrame(VulkanCore* core, VulkanDisplay* display, VulkanPipeline* pipelin
             pipeline->graphicsPipeline
         );
 
+    VkDeviceSize vertexOffset = 0;
+
+    vkCmdBindVertexBuffers(
+        cmdBuffer,
+        0,
+        1,
+        &renderer->vertexBuffer,
+        &vertexOffset
+    );
+
     vkCmdBindIndexBuffer(
         renderer->cmdBuffer,
         renderer->indexBuffer,
@@ -453,16 +463,6 @@ bool drawFrame(VulkanCore* core, VulkanDisplay* display, VulkanPipeline* pipelin
     vkCmdSetScissor(cmdBuffer, 0, 1, &scissor);
 
     vkCmdDrawIndexed(cmdBuffer, 6, 1, 0, 0, 0);
-
-    VkDeviceSize vertexOffset = 0;
-
-    vkCmdBindVertexBuffers(
-        cmdBuffer,
-        0,
-        1,
-        &renderer->vertexBuffer,
-        &vertexOffset
-    );
 
     //
     // Cmd Rendering End

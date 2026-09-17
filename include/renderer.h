@@ -8,6 +8,8 @@
 
 typedef struct {
     VkCommandPool cmdPool;
+    VkDescriptorPool descriptorPool;
+    VkDescriptorSet descriptorSet;
     VkCommandBuffer cmdBuffer;
     VkSemaphore imageAvailable;
     VkSemaphore renderFinished;
@@ -16,9 +18,11 @@ typedef struct {
     VkDeviceMemory vertexMemory;
     VkBuffer indexBuffer;
     VkDeviceMemory indexMemory;
+    VkBuffer uniformBuffer;
+    VkDeviceMemory uniformMemory;
 } VulkanRenderer;
 
-bool initVulkanRenderer(VulkanCore* core, VulkanRenderer* renderer);
+bool initVulkanRenderer(VulkanCore* core, VulkanRenderer* renderer, VulkanPipeline* pipeline);
 
 bool drawFrame(VulkanCore* core, VulkanDisplay* display, VulkanPipeline* pipeline, VulkanRenderer* renderer);
 

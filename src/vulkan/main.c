@@ -16,7 +16,7 @@ int main(){
     if (!initVulkanDevice(&core, display.surface)) return 1;
     if (!initVulkanSwapchain(&core, &display)) return 1;
     if (!initVulkanPipeline(&core, &display, &pipeline)) return 1;
-    if (!initVulkanRenderer(&core, &renderer)) return 1;
+    if (!initVulkanRenderer(&core, &renderer, &pipeline)) return 1;
 
 	printf("INIT success!!\n");
 

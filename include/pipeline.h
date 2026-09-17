@@ -8,6 +8,9 @@
 typedef struct {
     VkPipelineLayout pipelineLayout;
     VkPipeline graphicsPipeline;
+
+    VkDescriptorSetLayout descriptorSetLayout;
+    
 } VulkanPipeline;
 
 bool initVulkanPipeline(VulkanCore* core, VulkanDisplay* display, VulkanPipeline* pipeline);

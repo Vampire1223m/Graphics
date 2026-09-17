@@ -23,6 +23,8 @@ const Vertex vertices[] = {
     }
 };
 
+uniformBufferObj ubo = {1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1};
+
 const uint32_t verticesCount = sizeof(vertices)/sizeof(Vertex);
 
 Vertex frameVertices[verticesCount];

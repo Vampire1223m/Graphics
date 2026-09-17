@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-bool initVulkanRenderer(VulkanCore* core, VulkanRenderer* renderer) {
+bool initVulkanRenderer(VulkanCore* core, VulkanRenderer* renderer, VulkanPipeline* pipeline) {
 
     VkDevice device = core->device;
 
@@ -264,6 +264,163 @@ bool initVulkanRenderer(VulkanCore* core, VulkanRenderer* renderer) {
 
     vkUnmapMemory(device, renderer->indexMemory);
 
+    VkBufferCreateInfo bBufferInfo = {
+                .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
+                .size = sizeof(uniformBufferObj),
+                .usage = VK_BUFFER_USAGE_UINIFORM_BUFFER_BIT,
+                .sharingMode = VK_SHARING_MODE_EXCLUSIVE
+            };
+    s = vkCreateBuffer(
+            device,
+            &bBufferInfo,
+            NULL,
+            &renderer->uniformBuffer
+        );
+    if ( s != VK_SUCCESS){
+
+		printf("failed to uniform Buffer: %d\n", s);
+		return false;
+
+	}
+
+    VkMemoryRequirements bMemRequirements;
+
+    vkGetBufferMemoryRequirements(
+                device,
+                renderer->uniformBuffer,
+                &bMemRequirements
+            );
+
+    vkGetPhysicalDeviceMemoryProperties(
+                core->physicalDevice,
+                &memoryProperties
+            );
+
+    for (uint32_t i = 0; i < memoryProperties.memoryTypeCount; i++)
+    {
+        if ((bMemRequirements.memoryTypeBits & (1 << i)) && 
+            (memoryProperties.memoryTypes[i].propertyFlags & VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT) && 
+            (memoryProperties.memoryTypes[i].propertyFlags & VK_MEMORY_PROPERTY_HOST_COHERENT_BIT)){
+
+            memoryTypeIndex = i;
+            break;
+
+        }
+        
+    }
+    
+    VkMemoryAllocateInfo bAllocInfo = {
+                .sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO,
+                .allocationSize = bMemRequirements.size,
+                .memoryTypeIndex = memoryTypeIndex
+            };
+
+    s = vkAllocateMemory(
+            device,
+            &bAllocInfo,
+            NULL,
+            &renderer->bufferMemory
+        );
+    if ( s != VK_SUCCESS){
+
+		printf("failed to allocate buffer memory: %d\n", s);
+		return false;
+
+	}
+
+    s = vkBindBufferMemory(
+        device,
+        renderer->uniformBuffer,
+        renderer->uniformMemory,
+        0
+    );
+    if ( s != VK_SUCCESS){
+
+		printf("failed to bind buffer memory: %d\n", s);
+		return false;
+
+	}
+
+    void *bData;
+
+    s = vkMapMemory(
+        device,
+        renderer->uniformMemory,
+        0,
+        sizeof(uniformBufferObj),
+        0,
+        &bData
+    );
+    if ( s != VK_SUCCESS){
+
+		printf("failed to map buffer memory: %d\n", s);
+		return false;
+
+	}
+
+    memcpy(
+        bData,
+        ubo,
+        sizeof(uniformBufferObj)
+    );
+
+    vkUnmapMemory(device, renderer->uniformMemory);
+
+    VkDescriptorPoolSize dPoolSize = {
+                .sType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+                .descriptorCount = 1
+            };
+
+    VkDescriptorPoolCreateInfo dPoolInfo = {
+                .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO,
+                .poolSizeCount = 1,
+                .pPoolSizes = &dPoolsize,
+                .maxSets = 1
+            };
+
+    s = vkCreateDescriptorPool(
+            device,
+            &dPoolInfo,
+            NULL,
+            &renderer->descriptorPool
+        );
+
+    VkDescriptorSetAllocateInfo dAllocInfo = {
+                .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO,
+                .descriptorPool = &renderer->descriptorPool,
+                .descriptorSetCount = 1,
+                .pSetLayouts = &pipeline->descriptorSetLayout
+            };
+
+    s = vkAllocateDescriptorSets(
+            device,
+            &dAllocInfo,
+            &renderer->descriptorSet
+        );
+
+    VkDescriptorBufferInfo dBufferInfo = {
+                .buffer = renderer->unifromBuffer,
+                .offset = 0,
+                .range = sizeof(uniformBufferObj)
+            };
+    
+    VkWriteDescriptorSet descriptorWrite = {
+                .sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+                .dstSet = renderer->descriptorSet,
+                .dstArreyElement = 0,
+                .descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+                .descriptorCount = 1,
+                .pBufferInfo = &bufferInfo
+            };
+
+    vkUpdateDescriptorSets(
+            device,
+            1,
+            &descriptorWrite,
+            0,
+            NULL
+        );
+
     VkCommandPoolCreateInfo poolInfo = {
                 .sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO,
                 .queueFamilyIndex = core->graphicsFamily
@@ -344,7 +501,7 @@ bool drawFrame(VulkanCore* core, VulkanDisplay* display, VulkanPipeline* pipelin
 
     // printf("acquired image: %u\n", imageIndex);
 
-    frameVertices[0].position[0] += 0.01f
+    // frameVertices[0].position[0] += 0.01f
 
     void *iData;
 
@@ -367,6 +524,31 @@ bool drawFrame(VulkanCore* core, VulkanDisplay* display, VulkanPipeline* pipelin
         iData,
         frameVertices,
         sizeof(Vertex)*verticesCount
+    );
+
+    vkUnmapMemory(device, renderer->vertexMemory);
+
+    void *bData;
+
+    s = vkMapMemory(
+        device,
+        renderer->vertexMemory,
+        0,
+        sizeof(uniformBufferObj),
+        0,
+        &bData
+    );
+    if ( s != VK_SUCCESS){
+
+		printf("failed to remap uniform memory: %d\n", s);
+		return false;
+
+	}
+
+    memcpy(
+        bData,
+        frameVertices,
+        sizeof(uniformBufferObj)
     );
 
     vkUnmapMemory(device, renderer->vertexMemory);
@@ -455,6 +637,17 @@ bool drawFrame(VulkanCore* core, VulkanDisplay* display, VulkanPipeline* pipelin
             cmdBuffer,
             VK_PIPELINE_BIND_POINT_GRAPHICS,
             pipeline->graphicsPipeline
+        );
+
+    vkCmdBindDescriptorSets(
+            cmdBuffer,
+            VK_PIPELINE_BIND_POINT_GRAPHICS,
+            pipeline->pipelineLayout,
+            0,
+            1,
+            &renderer->descriptorSet,
+            0,
+            NULL
         );
 
     VkDeviceSize vertexOffset = 0;

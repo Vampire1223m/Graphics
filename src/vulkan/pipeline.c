@@ -79,6 +79,41 @@ bool initVulkanPipeline(VulkanCore* core, VulkanDisplay* display, VulkanPipeline
 				.pName = "main"
 			};
 
+	VkDescriptorSetLayoutBinding uboLayoutBinding = {
+				.binding = 0,
+				.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+				.descriptorCount = 1,
+				.stageFlags = VK_SHADER_STAGE_VERTEX_BIT,
+				.pImmutableSamplers = NULL
+			};
+
+	VkDescriptorSetLayoutCreateInfo layoutInfo = {
+				.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
+				.bindingCount = 1,
+				.pBindings = &uboLayoutBinding
+			};
+
+	VkResult s = vkCreateDescriptorSetLayout(
+			device,
+			&layoutInfo,
+			NULL,
+			&pipeline->descriptorSetLayout
+		);
+
+	s = vkCreatePipelineLayout(
+			device,
+			&pipelineLayoutCreateInfo,
+			NULL,
+			&pipeline->pipelineLayout
+		);
+
+	if (s != VK_SUCCESS){
+
+		printf("Failed to create pipeline layout");
+		return false;
+
+	}
+
 	VkVertexInputBindingDescription vertexBinding = {
 				.binding = 0,
 				.stride = sizeof(Vertex),
@@ -165,25 +200,11 @@ bool initVulkanPipeline(VulkanCore* core, VulkanDisplay* display, VulkanPipeline
 
 	VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo = {
 				.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO,
-				.setLayoutCount = 0,
-				.pSetLayouts = NULL,
+				.setLayoutCount = 1,
+				.pSetLayouts = &pipeline->descriptorSetLayout,
 				.pushConstantRangeCount = 0,
 				.pPushConstantRanges = NULL
 			};
-
-	VkResult s = vkCreatePipelineLayout(
-			device,
-			&pipelineLayoutCreateInfo,
-			NULL,
-			&pipeline->pipelineLayout
-		);
-
-	if (s != VK_SUCCESS){
-
-		printf("Failed to create pipeline layout");
-		return false;
-
-	}
 
 	VkPipelineRenderingCreateInfo renderingInfo = {
 				.sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO,

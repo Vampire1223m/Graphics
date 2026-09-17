@@ -4,6 +4,11 @@
 #include "vertex.h"
 #include <stdint.h>
 
+typedef struct {
+    float transform[16];
+} uniformBufferObj;
+
+uniformBufferObj ubo;
 extern const Vertex vertices[];
 extern Vertex frameVertices[];
 extern const uint32_t indices[];

@@ -509,30 +509,30 @@ bool drawFrame(VulkanCore* core, VulkanDisplay* display, VulkanPipeline* pipelin
 
     // frameVertices[0].position[0] += 0.01f
 
-    void *iData;
+    void *vData;
 
     s = vkMapMemory(
         device,
-        renderer->indexMemory,
+        renderer->vertexMemory,
         0,
-        sizeof(uint32_t)*indicesCount,
+        sizeof(Vertex)*verticesCount,
         0,
-        &iData
+        &vData
     );
     if ( s != VK_SUCCESS){
 
-		printf("failed to remap index memory: %d\n", s);
+		printf("failed to remap framevertices memory: %d\n", s);
 		return false;
 
 	}
 
     memcpy(
-        iData,
+        vData,
         frameVertices,
-        sizeof(uint32_t)*indicesCount
+        sizeof(Vertex)*verticesCount
     );
 
-    vkUnmapMemory(device, renderer->indexMemory);
+    vkUnmapMemory(device, renderer->vertexMemory);
 
     void *bData;
 
@@ -553,7 +553,7 @@ bool drawFrame(VulkanCore* core, VulkanDisplay* display, VulkanPipeline* pipelin
 
     memcpy(
         bData,
-        ubo,
+        &ubo,
         sizeof(uniformBufferObj)
     );
 

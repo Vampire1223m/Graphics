@@ -5,6 +5,7 @@
 #include <stdint.h>
 
 typedef struct {
+    float projection[16];
     float transform[16];
 } uniformBufferObj;
 

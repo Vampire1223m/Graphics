@@ -1,4 +1,5 @@
 #include "vertices.h"
+#include "params.h"
 #include <strings.h>
 
 const Vertex vertices[] = {
@@ -24,7 +25,14 @@ const Vertex vertices[] = {
     }
 };
 
-uniformBufferObj ubo = {1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1};
+uniformBufferObj ubo = {.transform = 1,0,0,0,
+                                     0,1,0,0,
+                                     0,0,1,0,
+                                     0,0,0,1,
+                        .projection = 2/TARGET_DISPLAY_WIDTH,0,0,0,
+                                      0,2/TARGET_DISPLAY_HEIGHT,0,0,
+                                      0,0,1,0,
+                                      0,0,0,1};
 
 const uint32_t verticesCount = sizeof(vertices)/sizeof(Vertex);
 

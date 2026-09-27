@@ -51,8 +51,8 @@ void mat4Multiply(float *R, float *a, float *b){
 
     float result[16];
 
-    for (int i = 0; i < 16; i++){
-        for (int j = 0; j < 16; j++){
+    for (int i = 0; i < 4; i++){
+        for (int j = 0; j < 4; j++){
             result[i + (4*j)] = a[i]*b[4*j] + 
                                 a[i + 4]*b[1 + 4*j] + 
                                 a[i + 8]*b[2 + 4*j] + 

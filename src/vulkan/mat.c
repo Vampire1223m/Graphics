@@ -15,19 +15,33 @@ void mat4Identity(float *mat){
 
 void mat4Translate(float *mat, float x, float y){
 
-    mat4Identity(mat);
+    float temp[16];
+    float result[16];
 
-    mat[12] = x; // 1 0 0 x
-    mat[13] = y; // 0 1 0 y
+    mat4Identity(temp);
+
+    temp[12] = x; // 1 0 0 x
+    temp[13] = y; // 0 1 0 y
+
+    mat4Multiply(result, mat, temp);
+
+    memcpy(mat, result, sizeof(result));
 
 }
 
 void mat4Scale(float *mat, float x, float y){
 
-    mat4Identity(mat);
+    float temp[16];
+    float result[16];
 
-    mat[0] = x; // x 0 0 0
-    mat[5] = y; // 0 y 0 0
+    mat4Identity(temp);
+
+    temp[0] = x; // x 0 0 0
+    temp[5] = y; // 0 y 0 0
+
+    mat4Multiply(result, mat, temp);
+
+    memcpy(mat, result, sizeof(result));
 
 }
 
@@ -38,12 +52,19 @@ void mat4Rotate(float *mat, float angle){
     float c = cosf(angle);
     float s = sinf(angle);
 
-    mat4Identity(mat);
+    float temp[16];
+    float result[16];
 
-    mat[0] = c; // c -s  0  0
-    mat[4] = -s;// s  c  0  0
-    mat[1] = s; // 0  0  1  0
-    mat[5] = c; // 0  0  0  1
+    mat4Identity(temp);
+
+    temp[0] = c; // c -s  0  0
+    temp[4] = -s;// s  c  0  0
+    temp[1] = s; // 0  0  1  0
+    temp[5] = c; // 0  0  0  1
+
+    mat4Multiply(result, mat, temp);
+
+    memcpy(mat, result, sizeof(result));
 
 }
 

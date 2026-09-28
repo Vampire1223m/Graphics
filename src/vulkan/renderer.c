@@ -1,4 +1,5 @@
 #include "renderer.h"
+#include "mat.h"
 #include "vertices.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -535,6 +536,12 @@ bool drawFrame(VulkanCore* core, VulkanDisplay* display, VulkanPipeline* pipelin
     vkUnmapMemory(device, renderer->vertexMemory);
 
     void *bData;
+
+    float transformR[16];
+    float transformS[16];
+    mat4Rotate(transformR, 67.0f);
+    mat4Scale(transformS, 0.5f, 0.5f);
+    mat4Multiply(ubo.transform, transformR, transformS);
 
     s = vkMapMemory(
         device,

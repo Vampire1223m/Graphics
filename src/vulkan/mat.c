@@ -17,8 +17,8 @@ void mat4Translate(float *mat, float x, float y){
 
     mat4Identity(mat);
 
-    mat[3] = x; // 1 0 0 x
-    mat[7] = y; // 0 1 0 y
+    mat[12] = x; // 1 0 0 x
+    mat[13] = y; // 0 1 0 y
 
 }
 
@@ -41,8 +41,8 @@ void mat4Rotate(float *mat, float angle){
     mat4Identity(mat);
 
     mat[0] = c; // c -s  0  0
-    mat[1] = -s;// s  c  0  0
-    mat[4] = s; // 0  0  1  0
+    mat[4] = -s;// s  c  0  0
+    mat[1] = s; // 0  0  1  0
     mat[5] = c; // 0  0  0  1
 
 }

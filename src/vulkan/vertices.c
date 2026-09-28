@@ -5,37 +5,33 @@
 
 const Vertex vertices[] = {
     {
-        { -0.5f, -0.5f },
+        { -500.0f, -500.0f },
         { 1.0f, 0.0f, 0.0f },
         { 0.0f, 0.0f, 0.0f }
     },
     {
-        { 0.5f,  0.5f },
+        { 500.0f,  500.0f },
         { 0.0f, 1.0f, 0.0f },
         { 0.0f, 0.0f, 0.0f }
     },
     {
-        {-0.5f,  0.5f },
+        {-500.0f,  500.0f },
         { 0.0f, 0.0f, 1.0f },
         { 0.0f, 0.0f, 0.0f }
     },
     {
-        {0.5f,  -0.5f },
+        {500.0f,  -500.0f },
         { 0.0f, 0.0f, 1.0f },
         { 0.0f, 0.0f, 0.0f }
     }
 };
 
-float transform[16];
-
-mat4Rotate(transform, 45);
-
 uniformBufferObj ubo = {.transform = 1,0,0,0,
                                      0,1,0,0,
                                      0,0,1,0,
                                      0,0,0,1,
-                        .projection = 2/TARGET_DISPLAY_WIDTH,0,0,0,
-                                      0,2/TARGET_DISPLAY_HEIGHT,0,0,
+                        .projection = 2.0f/TARGET_DISPLAY_WIDTH,0,0,0,
+                                      0,-2.0f/TARGET_DISPLAY_HEIGHT,0,0,
                                       0,0,1,0,
                                       0,0,0,1};
 

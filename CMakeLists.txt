@@ -16,6 +16,7 @@ set(SOURCES
     src/vulkan/pipeline.c
     src/vulkan/renderer.c
     src/vulkan/vertices.c
+    src/vulkan/mat.c
 )
 
 add_custom_command(

@@ -1,4 +1,5 @@
 #include "vertices.h"
+#include "mat.h"
 #include "params.h"
 #include <strings.h>
 
@@ -24,6 +25,10 @@ const Vertex vertices[] = {
         { 0.0f, 0.0f, 0.0f }
     }
 };
+
+float transform[16];
+
+mat4Rotate(transform, 45);
 
 uniformBufferObj ubo = {.transform = 1,0,0,0,
                                      0,1,0,0,

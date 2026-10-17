@@ -1,7 +1,67 @@
 #include "core.h"
 #include "params.h"
 #include <stdio.h>
+#include <string.h>
 #include <stdlib.h>
+
+static bool isValidationLayerAvailable(void)
+{
+    uint32_t layerCount = 0;
+
+	VkResult s = vkEnumerateInstanceLayerProperties(&layerCount, NULL);
+
+	if (s != VK_SUCCESS) {
+		fprintf(stderr, "Failed to enumerate instance layer count: %d\n", s);
+		return false;
+	}
+
+	if (layerCount == 0) {
+        return false;
+    }
+
+	VkLayerProperties *layers = malloc(sizeof(VkLayerProperties) * layerCount);
+
+	if (layers == NULL) {
+		fprintf(stderr, "Failed to allocate layer property array\n");
+		return false;
+	}
+
+	s = vkEnumerateInstanceLayerProperties(&layerCount, layers);
+
+	if (s != VK_SUCCESS) {
+		fprintf(stderr, "Failed to enumerate instance layer: %d\n", s);
+		free(layers);
+		return false;
+	}
+
+	bool found = false;
+
+	for (size_t i = 0; i < layerCount; i++) {
+		if (strcmp(layers[i].layerName, "VK_LAYER_KHRONOS_validation") == 0) {
+			fprintf(stderr, "Validation Layer not Avalable");
+			found = true;
+			break;
+		}
+	}
+
+	free(layers);
+    return found;
+}
+
+static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
+    VkDebugUtilsMessageSeverityFlagBitsEXT severity,
+    VkDebugUtilsMessageTypeFlagsEXT type,
+    const VkDebugUtilsMessengerCallbackDataEXT *callbackData,
+    void *userData)
+{
+    (void)severity;
+    (void)type;
+    (void)userData;
+
+    fprintf(stderr, "Validation: %s\n", callbackData->pMessage);
+
+    return VK_FALSE;
+}
 
 bool initVulkanInstance(VulkanCore* core) {
 
@@ -15,17 +75,44 @@ bool initVulkanInstance(VulkanCore* core) {
 				.engineVersion = VK_MAKE_VERSION(1, 0, 0),
 				.apiVersion = VK_API_VERSION_1_3
 			};
+	
+	if (!isValidationLayerAvailable()) {
+		fprintf(stderr, "VK_LAYER_KHRONOS_validation is unavailable\n");
+		return false;
+	}
+
+	VkDebugUtilsMessengerCreateInfoEXT debugCreateInfo = {
+				.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT,
+
+				.messageSeverity =	VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT |
+									VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT,
+
+				.messageType =	VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT |
+								VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT |
+								VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT,
+
+				.pfnUserCallback = debugCallback,
+				.pUserData = NULL
+			};
+
+	const char *validationLayers[] = {
+    			"VK_LAYER_KHRONOS_validation"
+			};
 
 	const char* extensions[] = {
 				VK_KHR_DISPLAY_EXTENSION_NAME,
 				VK_KHR_SURFACE_EXTENSION_NAME,
+				VK_EXT_DEBUG_UTILS_EXTENSION_NAME
 			};
 	
 	VkInstanceCreateInfo createInfo = {
 				.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO,
 				.pApplicationInfo = &appInfo,
-				.enabledExtensionCount = 2,
-				.ppEnabledExtensionNames = extensions
+				.enabledExtensionCount = sizeof(extensions) / sizeof(extensions[0]),
+				.ppEnabledExtensionNames = extensions,
+				.enabledLayerCount = sizeof(validationLayers) / sizeof(validationLayers[0]),
+				.ppEnabledLayerNames = validationLayers
+				.pNext = &debugCreateInfo,
 			};
 
 	VkResult s = vkCreateInstance(
@@ -35,7 +122,7 @@ bool initVulkanInstance(VulkanCore* core) {
 			);
 	if ( s != VK_SUCCESS) {
 
-		printf("failure to create instance: %d\n", s);
+		fprintf(stderr, "failure to create instance: %d\n", s);
 		return false;
 
 	}
@@ -49,7 +136,7 @@ bool initVulkanInstance(VulkanCore* core) {
 
 	if ( s != VK_SUCCESS || deviceCount == 0) {
 
-		printf("failure to enumerate GPUs: %d\n", s);
+		fprintf(stderr, "failure to enumerate GPUs: %d\n", s);
         return false;
 
 	}
@@ -104,7 +191,7 @@ bool initVulkanInstance(VulkanCore* core) {
 	
 	if (Pdevice == VK_NULL_HANDLE) {
 
-		printf("No discrete GPU found\n");
+		fprintf(stderr, "No discrete GPU found\n");
 		return false;
 
 	}
@@ -164,7 +251,7 @@ bool initVulkanDevice(VulkanCore* core, VkSurfaceKHR surface){
 
     if (graphicsFamily == UINT32_MAX){
 
-		printf("No (graphics and present support) queue family found");
+		fprintf(stderr, "No (graphics and present support) queue family found");
 		return false;
 	
 	}
@@ -209,7 +296,7 @@ bool initVulkanDevice(VulkanCore* core, VkSurfaceKHR surface){
 
 	if (s != VK_SUCCESS){
 			
-		printf("Failed to create device: %d\n", s);
+		fprintf(stderr, "Failed to create device: %d\n", s);
 		return false;
 	
 	}

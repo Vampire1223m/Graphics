@@ -111,7 +111,7 @@ bool initVulkanInstance(VulkanCore* core) {
 				.enabledExtensionCount = sizeof(extensions) / sizeof(extensions[0]),
 				.ppEnabledExtensionNames = extensions,
 				.enabledLayerCount = sizeof(validationLayers) / sizeof(validationLayers[0]),
-				.ppEnabledLayerNames = validationLayers
+				.ppEnabledLayerNames = validationLayers,
 				.pNext = &debugCreateInfo,
 			};
 

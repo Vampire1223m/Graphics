@@ -39,6 +39,7 @@ add_custom_target(CompileShaders ALL DEPENDS
 add_executable(VulkanEngine ${SOURCES})
 add_executable(DumbDrm src/drm/dumbdrm.c)
 
+target_compile_options(VulkanEngine PRIVATE -Wall -Wextra -Wpedantic)
 target_link_libraries(VulkanEngine PRIVATE Vulkan::Vulkan m)
 
 set_target_properties(VulkanEngine PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/bin")

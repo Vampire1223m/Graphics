@@ -11,8 +11,11 @@ typedef struct {
     VkDescriptorPool descriptorPool;
     VkDescriptorSet descriptorSet;
     VkCommandBuffer cmdBuffer;
+
     VkSemaphore imageAvailable;
-    VkSemaphore renderFinished;
+    VkSemaphore *renderFinished;
+    uint32_t renderFinishedCount;
+
     VkFence inFlightFence;
     VkBuffer vertexBuffer;
     VkDeviceMemory vertexMemory;
@@ -22,7 +25,7 @@ typedef struct {
     VkDeviceMemory uniformMemory;
 } VulkanRenderer;
 
-bool initVulkanRenderer(VulkanCore* core, VulkanRenderer* renderer, VulkanPipeline* pipeline);
+bool initVulkanRenderer(VulkanCore* core, VulkanDisplay* display, VulkanRenderer* renderer, VulkanPipeline* pipeline);
 
 bool drawFrame(VulkanCore* core, VulkanDisplay* display, VulkanPipeline* pipeline, VulkanRenderer* renderer);
 

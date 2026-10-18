@@ -5,7 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-bool initVulkanRenderer(VulkanCore* core, VulkanRenderer* renderer, VulkanPipeline* pipeline) {
+bool initVulkanRenderer(VulkanCore* core, VulkanDisplay* display, VulkanRenderer* renderer, VulkanPipeline* pipeline) {
 
     VkDevice device = core->device;
 
@@ -21,23 +21,46 @@ bool initVulkanRenderer(VulkanCore* core, VulkanRenderer* renderer, VulkanPipeli
 		);
 	if ( s != VK_SUCCESS){
 
-		printf("failed to create image available Semaphore: %d\n", s);
+		fprintf(stderr, "failed to create image available Semaphore: %d\n", s);
 		return false;
 
 	}
 
-	s = vkCreateSemaphore(
-			device,
-			&semaphoreInfo,
-			NULL,
-			&renderer->renderFinished
-		);
-	if ( s != VK_SUCCESS){
+    renderer->renderFinishedCount = display->imageCount;
 
-		printf("failed to create render finished Semaphore: %d\n", s);
-		return false;
+    renderer->renderFinished = calloc(renderer->renderFinishedCount, sizeof(*renderer->renderFinished));
 
-	}
+    if (display->imageCount == 0){
+        fprintf(stderr, "cant create semaphores, 0 swapchain images\n");
+        return false;
+    }
+    
+    for (uint32_t i = 0; i < renderer->renderFinishedCount; ++i)
+    {
+        s = vkCreateSemaphore(
+                device,
+                &semaphoreInfo,
+                NULL,
+                &renderer->renderFinished[i]
+            );
+        if ( s != VK_SUCCESS){
+
+            for (uint32_t j = 0; j < i; ++j)
+            {
+                vkDestroySemaphore(device, renderer->renderFinished[j], NULL);
+            }
+            
+            free(renderer->renderFinished);
+
+            renderer->renderFinished = NULL;
+            renderer->renderFinishedCount = 0;
+
+            fprintf(stderr, "failed to create render finished Semaphore: %d\n", s);
+            return false;
+
+        }
+    }
+    
 
     VkFenceCreateInfo fenceInfo = {
 			.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO,
@@ -52,7 +75,7 @@ bool initVulkanRenderer(VulkanCore* core, VulkanRenderer* renderer, VulkanPipeli
 		);
 	if ( s != VK_SUCCESS){
 
-		printf("failed to create fence: %d\n", s);
+		fprintf(stderr, "failed to create fence: %d\n", s);
 		return false;
 
 	}
@@ -71,7 +94,7 @@ bool initVulkanRenderer(VulkanCore* core, VulkanRenderer* renderer, VulkanPipeli
         );
     if ( s != VK_SUCCESS){
 
-		printf("failed to vertex Buffer: %d\n", s);
+		fprintf(stderr, "failed to vertex Buffer: %d\n", s);
 		return false;
 
 	}
@@ -120,7 +143,7 @@ bool initVulkanRenderer(VulkanCore* core, VulkanRenderer* renderer, VulkanPipeli
         );
     if ( s != VK_SUCCESS){
 
-		printf("failed to allocate vertex memory: %d\n", s);
+		fprintf(stderr, "failed to allocate vertex memory: %d\n", s);
 		return false;
 
 	}
@@ -133,7 +156,7 @@ bool initVulkanRenderer(VulkanCore* core, VulkanRenderer* renderer, VulkanPipeli
     );
     if ( s != VK_SUCCESS){
 
-		printf("failed to bind vertex memory: %d\n", s);
+		fprintf(stderr, "failed to bind vertex memory: %d\n", s);
 		return false;
 
 	}
@@ -150,7 +173,7 @@ bool initVulkanRenderer(VulkanCore* core, VulkanRenderer* renderer, VulkanPipeli
     );
     if ( s != VK_SUCCESS){
 
-		printf("failed to map vertex memory: %d\n", s);
+		fprintf(stderr, "failed to map vertex memory: %d\n", s);
 		return false;
 
 	}
@@ -183,7 +206,7 @@ bool initVulkanRenderer(VulkanCore* core, VulkanRenderer* renderer, VulkanPipeli
         );
     if ( s != VK_SUCCESS){
 
-		printf("failed to index Buffer: %d\n", s);
+		fprintf(stderr, "failed to index Buffer: %d\n", s);
 		return false;
 
 	}
@@ -228,7 +251,7 @@ bool initVulkanRenderer(VulkanCore* core, VulkanRenderer* renderer, VulkanPipeli
         );
     if ( s != VK_SUCCESS){
 
-		printf("failed to allocate index memory: %d\n", s);
+		fprintf(stderr, "failed to allocate index memory: %d\n", s);
 		return false;
 
 	}
@@ -241,7 +264,7 @@ bool initVulkanRenderer(VulkanCore* core, VulkanRenderer* renderer, VulkanPipeli
     );
     if ( s != VK_SUCCESS){
 
-		printf("failed to bind vertex memory: %d\n", s);
+		fprintf(stderr, "failed to bind vertex memory: %d\n", s);
 		return false;
 
 	}
@@ -258,7 +281,7 @@ bool initVulkanRenderer(VulkanCore* core, VulkanRenderer* renderer, VulkanPipeli
     );
     if ( s != VK_SUCCESS){
 
-		printf("failed to map index memory: %d\n", s);
+		fprintf(stderr, "failed to map index memory: %d\n", s);
 		return false;
 
 	}
@@ -285,7 +308,7 @@ bool initVulkanRenderer(VulkanCore* core, VulkanRenderer* renderer, VulkanPipeli
         );
     if ( s != VK_SUCCESS){
 
-		printf("failed to uniform Buffer: %d\n", s);
+		fprintf(stderr, "failed to uniform Buffer: %d\n", s);
 		return false;
 
 	}
@@ -330,7 +353,7 @@ bool initVulkanRenderer(VulkanCore* core, VulkanRenderer* renderer, VulkanPipeli
         );
     if ( s != VK_SUCCESS){
 
-		printf("failed to allocate buffer memory: %d\n", s);
+		fprintf(stderr, "failed to allocate buffer memory: %d\n", s);
 		return false;
 
 	}
@@ -343,7 +366,7 @@ bool initVulkanRenderer(VulkanCore* core, VulkanRenderer* renderer, VulkanPipeli
     );
     if ( s != VK_SUCCESS){
 
-		printf("failed to bind buffer memory: %d\n", s);
+		fprintf(stderr, "failed to bind buffer memory: %d\n", s);
 		return false;
 
 	}
@@ -360,7 +383,7 @@ bool initVulkanRenderer(VulkanCore* core, VulkanRenderer* renderer, VulkanPipeli
     );
     if ( s != VK_SUCCESS){
 
-		printf("failed to map buffer memory: %d\n", s);
+		fprintf(stderr, "failed to map buffer memory: %d\n", s);
 		return false;
 
 	}
@@ -443,7 +466,7 @@ bool initVulkanRenderer(VulkanCore* core, VulkanRenderer* renderer, VulkanPipeli
     
     if ( s != VK_SUCCESS){
 
-        printf("failed to create command");
+        fprintf(stderr, "failed to create command");
         return false;
 
     }
@@ -463,7 +486,7 @@ bool initVulkanRenderer(VulkanCore* core, VulkanRenderer* renderer, VulkanPipeli
 
     if ( s != VK_SUCCESS){
 
-        printf("failed to allocate command buffer");
+        fprintf(stderr, "failed to allocate command buffer");
         return false;
 
     }
@@ -502,7 +525,7 @@ bool drawFrame(VulkanCore* core, VulkanDisplay* display, VulkanPipeline* pipelin
 
     if ( s != VK_SUCCESS){
 
-        printf("failed to acquire sc image: %d", s);
+        fprintf(stderr, "failed to acquire sc image: %d", s);
         return false;
 
     }
@@ -523,7 +546,7 @@ bool drawFrame(VulkanCore* core, VulkanDisplay* display, VulkanPipeline* pipelin
     );
     if ( s != VK_SUCCESS){
 
-		printf("failed to remap framevertices memory: %d\n", s);
+		fprintf(stderr, "failed to remap framevertices memory: %d\n", s);
 		return false;
 
 	}
@@ -554,7 +577,7 @@ bool drawFrame(VulkanCore* core, VulkanDisplay* display, VulkanPipeline* pipelin
     );
     if ( s != VK_SUCCESS){
 
-		printf("failed to remap uniform memory: %d\n", s);
+		fprintf(stderr, "failed to remap uniform memory: %d\n", s);
 		return false;
 
 	}
@@ -577,7 +600,7 @@ bool drawFrame(VulkanCore* core, VulkanDisplay* display, VulkanPipeline* pipelin
 
     if ( s != VK_SUCCESS){
 
-        printf("failed to begin command buffer");
+        fprintf(stderr, "failed to begin command buffer");
         return false;
 
     }
@@ -730,7 +753,7 @@ bool drawFrame(VulkanCore* core, VulkanDisplay* display, VulkanPipeline* pipelin
 
     if ( s != VK_SUCCESS){
 
-        printf("failed to end command buffer");
+        fprintf(stderr, "failed to end command buffer");
         return false;
 
     }
@@ -747,7 +770,7 @@ bool drawFrame(VulkanCore* core, VulkanDisplay* display, VulkanPipeline* pipelin
                 .pCommandBuffers = &cmdBuffer,
 
                 .signalSemaphoreCount = 1,
-                .pSignalSemaphores = &renderer->renderFinished
+                .pSignalSemaphores = &renderer->renderFinished[imageIndex]
             };
 
     s = vkQueueSubmit(
@@ -759,7 +782,7 @@ bool drawFrame(VulkanCore* core, VulkanDisplay* display, VulkanPipeline* pipelin
 
     if ( s != VK_SUCCESS){
 
-        printf("failed to submit command buffer");
+        fprintf(stderr, "failed to submit command buffer");
         return false;
 
     }
@@ -767,7 +790,7 @@ bool drawFrame(VulkanCore* core, VulkanDisplay* display, VulkanPipeline* pipelin
     VkPresentInfoKHR presentInfo = {
                 .sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR,
                 .waitSemaphoreCount = 1,
-                .pWaitSemaphores = &renderer->renderFinished,
+                .pWaitSemaphores = &renderer->renderFinished[imageIndex],
                 .swapchainCount = 1,
                 .pSwapchains = &display->swapchain,
                 .pImageIndices = &imageIndex
@@ -777,7 +800,7 @@ bool drawFrame(VulkanCore* core, VulkanDisplay* display, VulkanPipeline* pipelin
 
     if ( s != VK_SUCCESS){
 
-        printf("failed to present: %d", s);
+        fprintf(stderr, "failed to present: %d", s);
         return false;
 
     }
@@ -793,7 +816,26 @@ void cleanupVulkanRenderer(VulkanCore* core, VulkanRenderer* renderer) {
     vkDeviceWaitIdle(device);
 
     if (renderer->imageAvailable) vkDestroySemaphore(device, renderer->imageAvailable, NULL);
-    if (renderer->renderFinished) vkDestroySemaphore(device, renderer->renderFinished, NULL);
+    if (renderer->renderFinished) {
+        for (uint32_t i = 0; i < renderer->renderFinishedCount; ++i) {
+
+            if (renderer->renderFinished[i] != VK_NULL_HANDLE) {
+
+                vkDestroySemaphore(
+                    device,
+                    renderer->renderFinished[i],
+                    NULL
+                );
+
+            }
+
+        }
+
+        free(renderer->renderFinished);
+        renderer->renderFinished = NULL;
+        renderer->renderFinishedCount = 0;
+        
+    }
     if (renderer->inFlightFence) vkDestroyFence(device, renderer->inFlightFence, NULL);
 
     if (renderer->vertexBuffer) vkDestroyBuffer(device, renderer->vertexBuffer, NULL);

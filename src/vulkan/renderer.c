@@ -563,6 +563,8 @@ bool drawFrame(VulkanCore* core, VulkanDisplay* display, VulkanPipeline* pipelin
 
     float transformR[16];
     float transformS[16];
+    mat4Identity(transformR);
+    mat4Identity(transformS);
     mat4Rotate(transformR, 67.0f);
     mat4Scale(transformS, 0.5f, 0.5f);
     mat4Multiply(ubo.transform, transformR, transformS);

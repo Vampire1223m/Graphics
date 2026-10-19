@@ -38,7 +38,6 @@ static bool isValidationLayerAvailable(void)
 
 	for (size_t i = 0; i < layerCount; i++) {
 		if (strcmp(layers[i].layerName, "VK_LAYER_KHRONOS_validation") == 0) {
-			fprintf(stderr, "Validation Layer not Avalable");
 			found = true;
 			break;
 		}

@@ -506,11 +506,6 @@ bool drawFrame(VulkanCore* core, VulkanDisplay* display, VulkanPipeline* pipelin
             VK_TRUE,
             UINT64_MAX
         );
-    vkResetFences(
-            device,
-            1,
-            &renderer->inFlightFence
-        );
 
     uint32_t imageIndex;
 
@@ -756,6 +751,18 @@ bool drawFrame(VulkanCore* core, VulkanDisplay* display, VulkanPipeline* pipelin
     if ( s != VK_SUCCESS){
 
         fprintf(stderr, "failed to end command buffer");
+        return false;
+
+    }
+
+    s = vkResetFences(
+            device,
+            1,
+            &renderer->inFlightFence
+        );
+    if ( s != VK_SUCCESS){
+
+        fprintf(stderr, "failed to reset fence buffer");
         return false;
 
     }

@@ -62,6 +62,34 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
     return VK_FALSE;
 }
 
+static VkResult createDebugMessenger(VkInstance instance, const VkDebugUtilsMessengerCreateInfoEXT *createInfo, VkDebugUtilsMessenderEXT *messenger){
+
+	PFN_vkCreateDebugUtilsMessengerEXT createFunction = (PFN_vkCreateDebugUtilsMessengerEXT)vkGetInstanceProcAddr(instance, "vkCreateDebugUtilsMessengerEXT");
+
+	if (createFunction == NULL)
+	{
+		return VK_ERROR_EXTENSION_NOT_PRESENT;
+	}
+
+	return createFunction(
+			instance,
+			createInfo,
+			NULL,
+			messenger
+		);
+	
+}
+
+static void destroyDebugMessenger( VkInstance instance, VkDebugUtilsMessengerEXT messenger){
+
+    PFN_vkDestroyDebugUtilsMessengerEXT destroyFunction = (PFN_vkDestroyDebugUtilsMessengerEXT)vkGetInstanceProcAddr(instance, "vkDestroyDebugUtilsMessengerEXT");
+
+    if (destroyFunction != NULL) {
+        destroyFunction(instance, messenger, NULL);
+    }
+
+}
+
 bool initVulkanInstance(VulkanCore* core) {
 
     VkInstance instance;
@@ -122,6 +150,20 @@ bool initVulkanInstance(VulkanCore* core) {
 	if ( s != VK_SUCCESS) {
 
 		fprintf(stderr, "failure to create instance: %d\n", s);
+		return false;
+
+	}
+
+	s = createDebugMessenger(
+				instance,
+				&debugCreateInfo,
+				&core->debugMessenger
+			);
+	if (s != VK_SUCCESS) {
+
+		fprintf(stderr, "Failed to create debug messenger: %d\n", s);
+
+		vkDestroyInstance(instance, NULL);
 		return false;
 
 	}
@@ -326,11 +368,19 @@ bool initVulkanDevice(VulkanCore* core, VkSurfaceKHR surface){
 
 void cleanupVulkanCore(VulkanCore* core){
 
-    if (core->device) {
-        vkDestroyDevice(core->device, NULL);
+    if (core->device) vkDestroyDevice(core->device, NULL);
+
+	if (core->debugMessenger != VK_NULL_HANDLE) {
+		
+        destroyDebugMessenger(
+            core->instance,
+            core->debugMessenger
+        );
+
+        core->debugMessenger = VK_NULL_HANDLE;
+
     }
-    if (core->instance) {
-        vkDestroyInstance(core->instance, NULL);
-    }
+
+    if (core->instance) vkDestroyInstance(core->instance, NULL);
 
 }

@@ -6,6 +6,7 @@
 
 typedef struct {
     VkInstance instance;
+    VkDebugUtilsMessengerEXT debugMessenger;
     VkPhysicalDevice physicalDevice;
     VkDevice device;
     uint32_t graphicsFamily;

@@ -5,6 +5,31 @@
 #include <stdlib.h>
 #include <string.h>
 
+static bool findMemoryType( VkPhysicalDevice physicalDevice, uint32_t allowedTypeBits, VkMemoryPropertyFlags requiredProperties, uint32_t *memoryTypeIndex ){
+
+    VkPhysicalDeviceMemoryProperties memoryProperties;
+
+    vkGetPhysicalDeviceMemoryProperties(
+                physicalDevice,
+                &memoryProperties
+            );
+
+    for (uint32_t i = 0; i < memoryProperties.memoryTypeCount; i++)
+    {
+        if ((allowedTypeBits & (1 << i)) && 
+            ((memoryProperties.memoryTypes[i].propertyFlags & requiredProperties) == requiredProperties)){
+
+            *memoryTypeIndex = i;
+            return true;
+
+        }
+        
+    }
+
+    return false;
+   
+}
+
 bool initVulkanRenderer(VulkanCore* core, VulkanDisplay* display, VulkanRenderer* renderer, VulkanPipeline* pipeline) {
 
     VkDevice device = core->device;
@@ -28,13 +53,19 @@ bool initVulkanRenderer(VulkanCore* core, VulkanDisplay* display, VulkanRenderer
 
     renderer->renderFinishedCount = display->imageCount;
 
-    renderer->renderFinished = calloc(renderer->renderFinishedCount, sizeof(*renderer->renderFinished));
-
     if (display->imageCount == 0){
         fprintf(stderr, "cant create semaphores, 0 swapchain images\n");
         return false;
     }
+
+    renderer->renderFinished = calloc(renderer->renderFinishedCount, sizeof(*renderer->renderFinished));
     
+    if (renderer->renderFinished == NULL) {
+        fprintf(stderr, "Failed to allocate render-finished semaphore array\n");
+        renderer->renderFinishedCount = 0;
+        return false;
+    }
+
     for (uint32_t i = 0; i < renderer->renderFinishedCount; ++i)
     {
         s = vkCreateSemaphore(
@@ -107,25 +138,15 @@ bool initVulkanRenderer(VulkanCore* core, VulkanDisplay* display, VulkanRenderer
                 &memRequirements
             );
 
-    VkPhysicalDeviceMemoryProperties memoryProperties;
+    uint32_t memoryTypeIndex = UINT32_MAX;
 
-    vkGetPhysicalDeviceMemoryProperties(
-                core->physicalDevice,
-                &memoryProperties
-            );
+    if (!findMemoryType(core->physicalDevice, memRequirements.memoryTypeBits, 
+        VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+        &memoryTypeIndex)) {
 
-    uint32_t memoryTypeIndex;
-
-    for (uint32_t i = 0; i < memoryProperties.memoryTypeCount; i++)
-    {
-        if ((memRequirements.memoryTypeBits & (1 << i)) && 
-            (memoryProperties.memoryTypes[i].propertyFlags & VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT) && 
-            (memoryProperties.memoryTypes[i].propertyFlags & VK_MEMORY_PROPERTY_HOST_COHERENT_BIT)){
-
-            memoryTypeIndex = i;
-            break;
-
-        }
+        fprintf(stderr, "No compatible vertex memory type found\n");
+        vkDestroyBuffer(core->device, renderer->vertexBuffer, NULL);
+        return false;
         
     }
     
@@ -219,21 +240,13 @@ bool initVulkanRenderer(VulkanCore* core, VulkanDisplay* display, VulkanRenderer
                 &iMemRequirements
             );
 
-    vkGetPhysicalDeviceMemoryProperties(
-                core->physicalDevice,
-                &memoryProperties
-            );
+    if (!findMemoryType(core->physicalDevice, iMemRequirements.memoryTypeBits, 
+        VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+        &memoryTypeIndex)) {
 
-    for (uint32_t i = 0; i < memoryProperties.memoryTypeCount; i++)
-    {
-        if ((iMemRequirements.memoryTypeBits & (1 << i)) && 
-            (memoryProperties.memoryTypes[i].propertyFlags & VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT) && 
-            (memoryProperties.memoryTypes[i].propertyFlags & VK_MEMORY_PROPERTY_HOST_COHERENT_BIT)){
-
-            memoryTypeIndex = i;
-            break;
-
-        }
+        fprintf(stderr, "No compatible index memory type found\n");
+        vkDestroyBuffer(core->device, renderer->indexBuffer, NULL);
+        return false;
         
     }
     
@@ -321,21 +334,13 @@ bool initVulkanRenderer(VulkanCore* core, VulkanDisplay* display, VulkanRenderer
                 &bMemRequirements
             );
 
-    vkGetPhysicalDeviceMemoryProperties(
-                core->physicalDevice,
-                &memoryProperties
-            );
+    if (!findMemoryType(core->physicalDevice, bMemRequirements.memoryTypeBits, 
+        VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+        &memoryTypeIndex)) {
 
-    for (uint32_t i = 0; i < memoryProperties.memoryTypeCount; i++)
-    {
-        if ((bMemRequirements.memoryTypeBits & (1 << i)) && 
-            (memoryProperties.memoryTypes[i].propertyFlags & VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT) && 
-            (memoryProperties.memoryTypes[i].propertyFlags & VK_MEMORY_PROPERTY_HOST_COHERENT_BIT)){
-
-            memoryTypeIndex = i;
-            break;
-
-        }
+        fprintf(stderr, "No compatible uniform memory type found\n");
+        vkDestroyBuffer(core->device, renderer->uniformBuffer, NULL);
+        return false;
         
     }
     

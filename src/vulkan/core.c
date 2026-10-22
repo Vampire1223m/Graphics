@@ -188,11 +188,24 @@ bool initVulkanInstance(VulkanCore* core) {
 	
 	VkPhysicalDevice Pdevice = VK_NULL_HANDLE;
 
-	vkEnumeratePhysicalDevices(
+	s = vkEnumeratePhysicalDevices(
 				instance,
 				&deviceCount,
 				devices
 			);
+	if ( s != VK_SUCCESS) {
+
+		fprintf(stderr, "failure to retrieve physical devices: %d\n", s);
+
+		destroyDebugMessenger(
+            instance,
+            core->debugMessenger
+        );
+
+		vkDistroyInstance(instance, NULL);
+        return false;
+
+	}
 
 	for (uint32_t i = 0; i < deviceCount; i++){
 

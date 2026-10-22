@@ -202,7 +202,7 @@ bool initVulkanInstance(VulkanCore* core) {
             core->debugMessenger
         );
 
-		vkDistroyInstance(instance, NULL);
+		vkDestroyInstance(instance, NULL);
         return false;
 
 	}

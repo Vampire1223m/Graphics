@@ -47,7 +47,7 @@ bool initVulkanRenderer(VulkanCore* core, VulkanDisplay* display, VulkanRenderer
 	if ( s != VK_SUCCESS){
 
 		fprintf(stderr, "failed to create image available Semaphore: %d\n", s);
-		return false;
+		goto fail;
 
 	}
 
@@ -55,7 +55,7 @@ bool initVulkanRenderer(VulkanCore* core, VulkanDisplay* display, VulkanRenderer
 
     if (display->imageCount == 0){
         fprintf(stderr, "cant create semaphores, 0 swapchain images\n");
-        return false;
+        goto fail;
     }
 
     renderer->renderFinished = calloc(renderer->renderFinishedCount, sizeof(*renderer->renderFinished));
@@ -63,7 +63,7 @@ bool initVulkanRenderer(VulkanCore* core, VulkanDisplay* display, VulkanRenderer
     if (renderer->renderFinished == NULL) {
         fprintf(stderr, "Failed to allocate render-finished semaphore array\n");
         renderer->renderFinishedCount = 0;
-        return false;
+        goto fail;
     }
 
     for (uint32_t i = 0; i < renderer->renderFinishedCount; ++i)
@@ -87,7 +87,7 @@ bool initVulkanRenderer(VulkanCore* core, VulkanDisplay* display, VulkanRenderer
             renderer->renderFinishedCount = 0;
 
             fprintf(stderr, "failed to create render finished Semaphore: %d\n", s);
-            return false;
+            goto fail;
 
         }
     }
@@ -107,7 +107,7 @@ bool initVulkanRenderer(VulkanCore* core, VulkanDisplay* display, VulkanRenderer
 	if ( s != VK_SUCCESS){
 
 		fprintf(stderr, "failed to create fence: %d\n", s);
-		return false;
+        goto fail;
 
 	}
 
@@ -126,7 +126,7 @@ bool initVulkanRenderer(VulkanCore* core, VulkanDisplay* display, VulkanRenderer
     if ( s != VK_SUCCESS){
 
 		fprintf(stderr, "failed to vertex Buffer: %d\n", s);
-		return false;
+        goto fail;
 
 	}
 
@@ -145,8 +145,7 @@ bool initVulkanRenderer(VulkanCore* core, VulkanDisplay* display, VulkanRenderer
         &memoryTypeIndex)) {
 
         fprintf(stderr, "No compatible vertex memory type found\n");
-        vkDestroyBuffer(core->device, renderer->vertexBuffer, NULL);
-        return false;
+        goto fail;
         
     }
     
@@ -165,7 +164,7 @@ bool initVulkanRenderer(VulkanCore* core, VulkanDisplay* display, VulkanRenderer
     if ( s != VK_SUCCESS){
 
 		fprintf(stderr, "failed to allocate vertex memory: %d\n", s);
-		return false;
+        goto fail;
 
 	}
 
@@ -178,7 +177,7 @@ bool initVulkanRenderer(VulkanCore* core, VulkanDisplay* display, VulkanRenderer
     if ( s != VK_SUCCESS){
 
 		fprintf(stderr, "failed to bind vertex memory: %d\n", s);
-		return false;
+        goto fail;
 
 	}
 
@@ -195,7 +194,7 @@ bool initVulkanRenderer(VulkanCore* core, VulkanDisplay* display, VulkanRenderer
     if ( s != VK_SUCCESS){
 
 		fprintf(stderr, "failed to map vertex memory: %d\n", s);
-		return false;
+        goto fail;
 
 	}
 
@@ -228,7 +227,7 @@ bool initVulkanRenderer(VulkanCore* core, VulkanDisplay* display, VulkanRenderer
     if ( s != VK_SUCCESS){
 
 		fprintf(stderr, "failed to index Buffer: %d\n", s);
-		return false;
+        goto fail;
 
 	}
 
@@ -245,8 +244,7 @@ bool initVulkanRenderer(VulkanCore* core, VulkanDisplay* display, VulkanRenderer
         &memoryTypeIndex)) {
 
         fprintf(stderr, "No compatible index memory type found\n");
-        vkDestroyBuffer(core->device, renderer->indexBuffer, NULL);
-        return false;
+        goto fail;
         
     }
     
@@ -265,7 +263,7 @@ bool initVulkanRenderer(VulkanCore* core, VulkanDisplay* display, VulkanRenderer
     if ( s != VK_SUCCESS){
 
 		fprintf(stderr, "failed to allocate index memory: %d\n", s);
-		return false;
+        goto fail;
 
 	}
 
@@ -278,7 +276,7 @@ bool initVulkanRenderer(VulkanCore* core, VulkanDisplay* display, VulkanRenderer
     if ( s != VK_SUCCESS){
 
 		fprintf(stderr, "failed to bind vertex memory: %d\n", s);
-		return false;
+        goto fail;
 
 	}
 
@@ -295,7 +293,7 @@ bool initVulkanRenderer(VulkanCore* core, VulkanDisplay* display, VulkanRenderer
     if ( s != VK_SUCCESS){
 
 		fprintf(stderr, "failed to map index memory: %d\n", s);
-		return false;
+        goto fail;
 
 	}
 
@@ -322,7 +320,7 @@ bool initVulkanRenderer(VulkanCore* core, VulkanDisplay* display, VulkanRenderer
     if ( s != VK_SUCCESS){
 
 		fprintf(stderr, "failed to uniform Buffer: %d\n", s);
-		return false;
+        goto fail;
 
 	}
 
@@ -339,8 +337,7 @@ bool initVulkanRenderer(VulkanCore* core, VulkanDisplay* display, VulkanRenderer
         &memoryTypeIndex)) {
 
         fprintf(stderr, "No compatible uniform memory type found\n");
-        vkDestroyBuffer(core->device, renderer->uniformBuffer, NULL);
-        return false;
+        goto fail;
         
     }
     
@@ -359,7 +356,7 @@ bool initVulkanRenderer(VulkanCore* core, VulkanDisplay* display, VulkanRenderer
     if ( s != VK_SUCCESS){
 
 		fprintf(stderr, "failed to allocate buffer memory: %d\n", s);
-		return false;
+        goto fail;
 
 	}
 
@@ -372,7 +369,7 @@ bool initVulkanRenderer(VulkanCore* core, VulkanDisplay* display, VulkanRenderer
     if ( s != VK_SUCCESS){
 
 		fprintf(stderr, "failed to bind buffer memory: %d\n", s);
-		return false;
+        goto fail;
 
 	}
 
@@ -389,7 +386,7 @@ bool initVulkanRenderer(VulkanCore* core, VulkanDisplay* display, VulkanRenderer
     if ( s != VK_SUCCESS){
 
 		fprintf(stderr, "failed to map buffer memory: %d\n", s);
-		return false;
+        goto fail;
 
 	}
 
@@ -472,7 +469,7 @@ bool initVulkanRenderer(VulkanCore* core, VulkanDisplay* display, VulkanRenderer
     if ( s != VK_SUCCESS){
 
         fprintf(stderr, "failed to create command");
-        return false;
+        goto fail;
 
     }
 
@@ -492,11 +489,15 @@ bool initVulkanRenderer(VulkanCore* core, VulkanDisplay* display, VulkanRenderer
     if ( s != VK_SUCCESS){
 
         fprintf(stderr, "failed to allocate command buffer");
-        return false;
+        goto fail;
 
     }
 
     return true;
+
+    fail:
+    destroyRendererResources(core, renderer);
+    return false;
 
 }
 
@@ -823,11 +824,9 @@ bool drawFrame(VulkanCore* core, VulkanDisplay* display, VulkanPipeline* pipelin
 
 }
 
-void cleanupVulkanRenderer(VulkanCore* core, VulkanRenderer* renderer) {
+void distroyRendererResources(VulkanCore* core, VulkanRenderer* renderer) {
+
     VkDevice device = core->device;
-    
-    // Waiting for device to finish operations before destroying sync objects
-    vkDeviceWaitIdle(device);
 
     if (renderer->imageAvailable) vkDestroySemaphore(device, renderer->imageAvailable, NULL);
     if (renderer->renderFinished) {
@@ -864,4 +863,13 @@ void cleanupVulkanRenderer(VulkanCore* core, VulkanRenderer* renderer) {
 
 
     if (renderer->cmdPool) vkDestroyCommandPool(device, renderer->cmdPool, NULL);
+
+}
+
+void cleanupVulkanRenderer(VulkanCore* core, VulkanRenderer* renderer) {
+    
+    vkDeviceWaitIdle(core->device);
+
+    distroyRendererResources(core, renderer);
+
 }

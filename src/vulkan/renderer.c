@@ -31,6 +31,15 @@ static bool findMemoryType( VkPhysicalDevice physicalDevice, uint32_t allowedTyp
 }
 
 static void destroyRendererResources(VulkanCore *core, VulkanRenderer *renderer);
+static void destroyVulkanBuffer(VkDevice device, VulkanBuffer *buffer);
+static bool createVulkanBuffer(
+    VulkanCore *core,
+    VkDeviceSize size,
+    VkBufferUsageFlags usage,
+    VkMemoryPropertyFlags properties,
+    bool persistentMap,
+    VulkanBuffer *buffer
+);
 
 bool initVulkanRenderer(VulkanCore* core, VulkanDisplay* display, VulkanRenderer* renderer, VulkanPipeline* pipeline) {
 
@@ -103,283 +112,62 @@ bool initVulkanRenderer(VulkanCore* core, VulkanDisplay* display, VulkanRenderer
 
 	}
 
-    VkBufferCreateInfo bufferInfo = {
-                .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
-                .size = sizeof(Vertex)*verticesCount,
-                .usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
-                .sharingMode = VK_SHARING_MODE_EXCLUSIVE
-            };
-    s = vkCreateBuffer(
-            device,
-            &bufferInfo,
-            NULL,
-            &renderer->vertexBuffer
-        );
-    if ( s != VK_SUCCESS){
-
-		fprintf(stderr, "failed to vertex Buffer: %d\n", s);
+    if (!createVulkanBuffer(core, 
+                            sizeof(Vertex)*verticesCount, 
+                            VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, 
+                            VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, 
+                            true, 
+                            &renderer->vertexBuffer)) {
+    
+        fprintf(stderr, "failed to create vertex buffer");
         goto fail;
-
-	}
-
-    VkMemoryRequirements memRequirements;
-
-    vkGetBufferMemoryRequirements(
-                device,
-                renderer->vertexBuffer,
-                &memRequirements
-            );
-
-    uint32_t memoryTypeIndex = UINT32_MAX;
-
-    if (!findMemoryType(core->physicalDevice, memRequirements.memoryTypeBits, 
-        VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-        &memoryTypeIndex)) {
-
-        fprintf(stderr, "No compatible vertex memory type found\n");
-        goto fail;
-        
     }
     
-    VkMemoryAllocateInfo vAllocInfo = {
-                .sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO,
-                .allocationSize = memRequirements.size,
-                .memoryTypeIndex = memoryTypeIndex
-            };
-
-    s = vkAllocateMemory(
-            device,
-            &vAllocInfo,
-            NULL,
-            &renderer->vertexMemory
-        );
-    if ( s != VK_SUCCESS){
-
-		fprintf(stderr, "failed to allocate vertex memory: %d\n", s);
-        goto fail;
-
-	}
-
-    s = vkBindBufferMemory(
-        device,
-        renderer->vertexBuffer,
-        renderer->vertexMemory,
-        0
-    );
-    if ( s != VK_SUCCESS){
-
-		fprintf(stderr, "failed to bind vertex memory: %d\n", s);
-        goto fail;
-
-	}
-
-    s = vkMapMemory(
-        device,
-        renderer->vertexMemory,
-        0,
-        sizeof(Vertex)*verticesCount,
-        0,
-        &renderer->vertexMapped
-    );
-    if ( s != VK_SUCCESS){
-
-		fprintf(stderr, "failed to map vertex memory: %d\n", s);
-        goto fail;
-
-	}
 
     memcpy(
-        renderer->vertexMapped,
+        renderer->vertexBuffer.mapped,
         vertices,
-        sizeof(Vertex)*verticesCount
+        renderer->vertexBuffer.size
     );
 
     memcpy(
         frameVertices,
         vertices,
-        sizeof(Vertex)*verticesCount
+        renderer->vertexBuffer.size
     );
 
-    VkBufferCreateInfo iBufferInfo = {
-                .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
-                .size = sizeof(uint32_t)*indicesCount,
-                .usage = VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
-                .sharingMode = VK_SHARING_MODE_EXCLUSIVE
-            };
-    s = vkCreateBuffer(
-            device,
-            &iBufferInfo,
-            NULL,
-            &renderer->indexBuffer
-        );
-    if ( s != VK_SUCCESS){
+    if (!createVulkanBuffer(core, 
+                            sizeof(uint32_t)*indicesCount, 
+                            VK_BUFFER_USAGE_INDEX_BUFFER_BIT, 
+                            VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, 
+                            true, 
+                            &renderer->indexBuffer)) {
 
-		fprintf(stderr, "failed to index Buffer: %d\n", s);
+        fprintf(stderr, "failed to create index buffer");
         goto fail;
-
-	}
-
-    VkMemoryRequirements iMemRequirements;
-
-    vkGetBufferMemoryRequirements(
-                device,
-                renderer->indexBuffer,
-                &iMemRequirements
-            );
-
-    if (!findMemoryType(core->physicalDevice, iMemRequirements.memoryTypeBits, 
-        VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-        &memoryTypeIndex)) {
-
-        fprintf(stderr, "No compatible index memory type found\n");
-        goto fail;
-        
     }
-    
-    VkMemoryAllocateInfo iAllocInfo = {
-                .sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO,
-                .allocationSize = iMemRequirements.size,
-                .memoryTypeIndex = memoryTypeIndex
-            };
-
-    s = vkAllocateMemory(
-            device,
-            &iAllocInfo,
-            NULL,
-            &renderer->indexMemory
-        );
-    if ( s != VK_SUCCESS){
-
-		fprintf(stderr, "failed to allocate index memory: %d\n", s);
-        goto fail;
-
-	}
-
-    s = vkBindBufferMemory(
-        device,
-        renderer->indexBuffer,
-        renderer->indexMemory,
-        0
-    );
-    if ( s != VK_SUCCESS){
-
-		fprintf(stderr, "failed to bind vertex memory: %d\n", s);
-        goto fail;
-
-	}
-
-    void *iData;
-
-    s = vkMapMemory(
-        device,
-        renderer->indexMemory,
-        0,
-        sizeof(uint32_t)*indicesCount,
-        0,
-        &iData
-    );
-    if ( s != VK_SUCCESS){
-
-		fprintf(stderr, "failed to map index memory: %d\n", s);
-        goto fail;
-
-	}
 
     memcpy(
-        iData,
+        renderer->indexBuffer.mapped,
         indices,
-        sizeof(uint32_t)*indicesCount
+        renderer->indexBuffer.size
     );
 
-    vkUnmapMemory(device, renderer->indexMemory);
+    if (!createVulkanBuffer(core, 
+                            sizeof(uniformBufferObj), 
+                            VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, 
+                            VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, 
+                            true, 
+                            &renderer->uniformBuffer)) {
 
-    VkBufferCreateInfo bBufferInfo = {
-                .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
-                .size = sizeof(uniformBufferObj),
-                .usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
-                .sharingMode = VK_SHARING_MODE_EXCLUSIVE
-            };
-    s = vkCreateBuffer(
-            device,
-            &bBufferInfo,
-            NULL,
-            &renderer->uniformBuffer
-        );
-    if ( s != VK_SUCCESS){
-
-		fprintf(stderr, "failed to uniform Buffer: %d\n", s);
+        fprintf(stderr, "failed to create uniform buffer");
         goto fail;
-
-	}
-
-    VkMemoryRequirements bMemRequirements;
-
-    vkGetBufferMemoryRequirements(
-                device,
-                renderer->uniformBuffer,
-                &bMemRequirements
-            );
-
-    if (!findMemoryType(core->physicalDevice, bMemRequirements.memoryTypeBits, 
-        VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-        &memoryTypeIndex)) {
-
-        fprintf(stderr, "No compatible uniform memory type found\n");
-        goto fail;
-        
     }
-    
-    VkMemoryAllocateInfo bAllocInfo = {
-                .sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO,
-                .allocationSize = bMemRequirements.size,
-                .memoryTypeIndex = memoryTypeIndex
-            };
-
-    s = vkAllocateMemory(
-            device,
-            &bAllocInfo,
-            NULL,
-            &renderer->uniformMemory
-        );
-    if ( s != VK_SUCCESS){
-
-		fprintf(stderr, "failed to allocate buffer memory: %d\n", s);
-        goto fail;
-
-	}
-
-    s = vkBindBufferMemory(
-        device,
-        renderer->uniformBuffer,
-        renderer->uniformMemory,
-        0
-    );
-    if ( s != VK_SUCCESS){
-
-		fprintf(stderr, "failed to bind buffer memory: %d\n", s);
-        goto fail;
-
-	}
-
-    s = vkMapMemory(
-        device,
-        renderer->uniformMemory,
-        0,
-        sizeof(uniformBufferObj),
-        0,
-        &renderer->uniformMapped
-    );
-    if ( s != VK_SUCCESS){
-
-		fprintf(stderr, "failed to map buffer memory: %d\n", s);
-        goto fail;
-
-	}
 
     memcpy(
-        renderer->uniformMapped,
+        renderer->uniformBuffer.mapped,
         &ubo,
-        sizeof(uniformBufferObj)
+        renderer->uniformBuffer.size
     );
 
     VkDescriptorPoolSize dPoolSize = {
@@ -427,7 +215,7 @@ bool initVulkanRenderer(VulkanCore* core, VulkanDisplay* display, VulkanRenderer
     }
 
     VkDescriptorBufferInfo dBufferInfo = {
-                .buffer = renderer->uniformBuffer,
+                .buffer = renderer->uniformBuffer.buffer,
                 .offset = 0,
                 .range = sizeof(uniformBufferObj)
             };
@@ -532,9 +320,9 @@ bool drawFrame(VulkanCore* core, VulkanDisplay* display, VulkanPipeline* pipelin
     // frameVertices[0].position[0] += 0.01f
 
     memcpy(
-        renderer->vertexMapped,
+        renderer->vertexBuffer.mapped,
         frameVertices,
-        sizeof(Vertex)*verticesCount
+        renderer->vertexBuffer.size
     );
 
     float transformR[16];
@@ -546,9 +334,9 @@ bool drawFrame(VulkanCore* core, VulkanDisplay* display, VulkanPipeline* pipelin
     mat4Multiply(ubo.transform, transformR, transformS);
 
     memcpy(
-        renderer->uniformMapped,
+        renderer->uniformBuffer.mapped,
         &ubo,
-        sizeof(uniformBufferObj)
+        renderer->uniformBuffer.size
     );
 
     vkResetCommandBuffer(cmdBuffer, 0);
@@ -654,13 +442,13 @@ bool drawFrame(VulkanCore* core, VulkanDisplay* display, VulkanPipeline* pipelin
         cmdBuffer,
         0,
         1,
-        &renderer->vertexBuffer,
+        &renderer->vertexBuffer.buffer,
         &vertexOffset
     );
 
     vkCmdBindIndexBuffer(
         renderer->cmdBuffer,
-        renderer->indexBuffer,
+        renderer->indexBuffer.buffer,
         0,
         VK_INDEX_TYPE_UINT32
     );
@@ -782,6 +570,132 @@ bool drawFrame(VulkanCore* core, VulkanDisplay* display, VulkanPipeline* pipelin
 
 }
 
+static void destroyVulkanBuffer(VkDevice device, VulkanBuffer *buffer){
+
+    if (buffer->buffer != VK_NULL_HANDLE) {
+        vkDestroyBuffer(device, buffer->buffer, NULL);
+        buffer->buffer = VK_NULL_HANDLE;
+    }
+
+    if (buffer->mapped != NULL) {
+        vkUnmapMemory(device, buffer->memory);
+        buffer->mapped = NULL;
+    }
+
+    if (buffer->memory != VK_NULL_HANDLE) {
+        vkFreeMemory(device, buffer->memory, NULL);
+        buffer->memory = VK_NULL_HANDLE;
+    }
+
+    buffer->size = 0;
+
+}
+
+static bool createVulkanBuffer(
+    VulkanCore *core,
+    VkDeviceSize size,
+    VkBufferUsageFlags usage,
+    VkMemoryPropertyFlags properties,
+    bool persistentMap,
+    VulkanBuffer *buffer
+){
+
+    *buffer = (VulkanBuffer){0};
+    buffer->size = size;
+
+    VkBufferCreateInfo bufferInfo = {
+        .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
+        .size = size,
+        .usage = usage,
+        .sharingMode = VK_SHARING_MODE_EXCLUSIVE
+    };
+
+    VkResult s = vkCreateBuffer(
+        core->device,
+        &bufferInfo,
+        NULL,
+        &buffer->buffer
+    );
+
+    if (s != VK_SUCCESS) {
+        fprintf(stderr, "Failed to create buffer: %d\n", s);
+        return false;
+    }
+
+    VkMemoryRequirements requirements;
+
+    vkGetBufferMemoryRequirements(
+        core->device,
+        buffer->buffer,
+        &requirements
+    );
+
+    uint32_t memoryTypeIndex;
+
+    if (!findMemoryType(
+            core->physicalDevice,
+            requirements.memoryTypeBits,
+            properties,
+            &memoryTypeIndex)) {
+
+        fprintf(stderr, "No compatible memory type found\n");
+        destroyVulkanBuffer(core->device, buffer);
+        return false;
+    }
+
+    VkMemoryAllocateInfo allocationInfo = {
+        .sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO,
+        .allocationSize = requirements.size,
+        .memoryTypeIndex = memoryTypeIndex
+    };
+
+    s = vkAllocateMemory(
+        core->device,
+        &allocationInfo,
+        NULL,
+        &buffer->memory
+    );
+
+    if (s != VK_SUCCESS) {
+        fprintf(stderr, "Failed to allocate buffer memory: %d\n", s);
+        destroyVulkanBuffer(core->device, buffer);
+        return false;
+    }
+
+    s = vkBindBufferMemory(
+        core->device,
+        buffer->buffer,
+        buffer->memory,
+        0
+    );
+
+    if (s != VK_SUCCESS) {
+        fprintf(stderr, "Failed to bind buffer memory: %d\n", s);
+        destroyVulkanBuffer(core->device, buffer);
+        return false;
+    }
+
+    if (persistentMap) {
+        s = vkMapMemory(
+            core->device,
+            buffer->memory,
+            0,
+            size,
+            0,
+            &buffer->mapped
+        );
+
+        if (s != VK_SUCCESS) {
+            fprintf(stderr, "Failed to map buffer memory: %d\n", s);
+            destroyVulkanBuffer(core->device, buffer);
+            return false;
+        }
+    }
+
+    return true;
+
+}
+
 static void destroyRendererResources(VulkanCore* core, VulkanRenderer* renderer) {
 
     VkDevice device = core->device;
@@ -815,45 +729,15 @@ static void destroyRendererResources(VulkanCore* core, VulkanRenderer* renderer)
         renderer->inFlightFence = VK_NULL_HANDLE;
     }
 
-    if (renderer->vertexBuffer != VK_NULL_HANDLE) {
-        vkDestroyBuffer(device, renderer->vertexBuffer, NULL);
-        renderer->vertexBuffer = VK_NULL_HANDLE;
-    }
-    if (renderer->vertexMapped != NULL) {
-        vkUnmapMemory(device, renderer->vertexMemory);
-        renderer->vertexMapped = NULL;
-    }
-    if (renderer->vertexMemory != VK_NULL_HANDLE) {
-        vkFreeMemory(device, renderer->vertexMemory, NULL);
-        renderer->vertexMemory = VK_NULL_HANDLE;
-    }
-    
-    if (renderer->indexBuffer != VK_NULL_HANDLE) {
-        vkDestroyBuffer(device, renderer->indexBuffer, NULL);
-        renderer->indexBuffer = VK_NULL_HANDLE;
-    }
-    if (renderer->indexMemory != VK_NULL_HANDLE) {
-        vkFreeMemory(device, renderer->indexMemory, NULL);
-        renderer->indexMemory = VK_NULL_HANDLE;
-    }
-
     if (renderer->descriptorPool != VK_NULL_HANDLE) {
         vkDestroyDescriptorPool(device, renderer->descriptorPool, NULL);
         renderer->descriptorPool = VK_NULL_HANDLE;
         renderer->descriptorSet = VK_NULL_HANDLE;
     }
-    if (renderer->uniformBuffer != VK_NULL_HANDLE) {
-        vkDestroyBuffer(device, renderer->uniformBuffer, NULL);
-        renderer->uniformBuffer = VK_NULL_HANDLE;
-    }
-    if (renderer->uniformMapped != NULL) {
-        vkUnmapMemory(device, renderer->uniformMemory);
-        renderer->uniformMapped = NULL;
-    }
-    if (renderer->uniformMemory != VK_NULL_HANDLE) {
-        vkFreeMemory(device, renderer->uniformMemory, NULL);
-        renderer->uniformMemory = VK_NULL_HANDLE;
-    }
+    
+    destroyVulkanBuffer(device, &renderer->vertexBuffer);
+    destroyVulkanBuffer(device, &renderer->indexBuffer);
+    destroyVulkanBuffer(device, &renderer->uniformBuffer);
 
     if (renderer->cmdPool != VK_NULL_HANDLE) {
         vkDestroyCommandPool(device, renderer->cmdPool, NULL);

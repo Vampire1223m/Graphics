@@ -7,6 +7,13 @@
 #include "pipeline.h"
 
 typedef struct {
+    VkBuffer buffer;
+    VkDeviceMemory memory;
+    VkDeviceSize size;
+    void *mapped;
+} VulkanBuffer;
+
+typedef struct {
     VkCommandPool cmdPool;
     VkDescriptorPool descriptorPool;
     VkDescriptorSet descriptorSet;
@@ -17,14 +24,10 @@ typedef struct {
     uint32_t renderFinishedCount;
 
     VkFence inFlightFence;
-    VkBuffer vertexBuffer;
-    VkDeviceMemory vertexMemory;
-    void *vertexMapped;
-    VkBuffer indexBuffer;
-    VkDeviceMemory indexMemory;
-    VkBuffer uniformBuffer;
-    VkDeviceMemory uniformMemory;
-    void *uniformMapped;
+    VulkanBuffer vertexBuffer;
+    VulkanBuffer indexBuffer;
+    VulkanBuffer uniformBuffer;
+
 } VulkanRenderer;
 
 bool initVulkanRenderer(VulkanCore* core, VulkanDisplay* display, VulkanRenderer* renderer, VulkanPipeline* pipeline);

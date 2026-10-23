@@ -173,15 +173,13 @@ bool initVulkanRenderer(VulkanCore* core, VulkanDisplay* display, VulkanRenderer
 
 	}
 
-    void *data;
-
     s = vkMapMemory(
         device,
         renderer->vertexMemory,
         0,
         sizeof(Vertex)*verticesCount,
         0,
-        &data
+        &renderer->vertexMapped
     );
     if ( s != VK_SUCCESS){
 
@@ -191,7 +189,7 @@ bool initVulkanRenderer(VulkanCore* core, VulkanDisplay* display, VulkanRenderer
 	}
 
     memcpy(
-        data,
+        renderer->vertexMapped,
         vertices,
         sizeof(Vertex)*verticesCount
     );
@@ -201,8 +199,6 @@ bool initVulkanRenderer(VulkanCore* core, VulkanDisplay* display, VulkanRenderer
         vertices,
         sizeof(Vertex)*verticesCount
     );
-
-    vkUnmapMemory(device, renderer->vertexMemory);
 
     VkBufferCreateInfo iBufferInfo = {
                 .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
@@ -365,15 +361,13 @@ bool initVulkanRenderer(VulkanCore* core, VulkanDisplay* display, VulkanRenderer
 
 	}
 
-    void *bData;
-
     s = vkMapMemory(
         device,
         renderer->uniformMemory,
         0,
         sizeof(uniformBufferObj),
         0,
-        &bData
+        &renderer->uniformMapped
     );
     if ( s != VK_SUCCESS){
 
@@ -383,12 +377,10 @@ bool initVulkanRenderer(VulkanCore* core, VulkanDisplay* display, VulkanRenderer
 	}
 
     memcpy(
-        bData,
+        renderer->uniformMapped,
         &ubo,
         sizeof(uniformBufferObj)
     );
-
-    vkUnmapMemory(device, renderer->uniformMemory);
 
     VkDescriptorPoolSize dPoolSize = {
                 .type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
@@ -539,32 +531,11 @@ bool drawFrame(VulkanCore* core, VulkanDisplay* display, VulkanPipeline* pipelin
 
     // frameVertices[0].position[0] += 0.01f
 
-    void *vData;
-
-    s = vkMapMemory(
-        device,
-        renderer->vertexMemory,
-        0,
-        sizeof(Vertex)*verticesCount,
-        0,
-        &vData
-    );
-    if ( s != VK_SUCCESS){
-
-		fprintf(stderr, "failed to remap framevertices memory: %d\n", s);
-		return false;
-
-	}
-
     memcpy(
-        vData,
+        renderer->vertexMapped,
         frameVertices,
         sizeof(Vertex)*verticesCount
     );
-
-    vkUnmapMemory(device, renderer->vertexMemory);
-
-    void *bData;
 
     float transformR[16];
     float transformS[16];
@@ -574,28 +545,11 @@ bool drawFrame(VulkanCore* core, VulkanDisplay* display, VulkanPipeline* pipelin
     mat4Scale(transformS, 0.5f, 0.5f);
     mat4Multiply(ubo.transform, transformR, transformS);
 
-    s = vkMapMemory(
-        device,
-        renderer->uniformMemory,
-        0,
-        sizeof(uniformBufferObj),
-        0,
-        &bData
-    );
-    if ( s != VK_SUCCESS){
-
-		fprintf(stderr, "failed to remap uniform memory: %d\n", s);
-		return false;
-
-	}
-
     memcpy(
-        bData,
+        renderer->uniformMapped,
         &ubo,
         sizeof(uniformBufferObj)
     );
-
-    vkUnmapMemory(device, renderer->uniformMemory);
 
     vkResetCommandBuffer(cmdBuffer, 0);
 
@@ -865,6 +819,10 @@ static void destroyRendererResources(VulkanCore* core, VulkanRenderer* renderer)
         vkDestroyBuffer(device, renderer->vertexBuffer, NULL);
         renderer->vertexBuffer = VK_NULL_HANDLE;
     }
+    if (renderer->vertexMapped != NULL) {
+        vkUnmapMemory(device, renderer->vertexMemory);
+        renderer->vertexMapped = NULL;
+    }
     if (renderer->vertexMemory != VK_NULL_HANDLE) {
         vkFreeMemory(device, renderer->vertexMemory, NULL);
         renderer->vertexMemory = VK_NULL_HANDLE;
@@ -887,6 +845,10 @@ static void destroyRendererResources(VulkanCore* core, VulkanRenderer* renderer)
     if (renderer->uniformBuffer != VK_NULL_HANDLE) {
         vkDestroyBuffer(device, renderer->uniformBuffer, NULL);
         renderer->uniformBuffer = VK_NULL_HANDLE;
+    }
+    if (renderer->uniformMapped != NULL) {
+        vkUnmapMemory(device, renderer->uniformMemory);
+        renderer->uniformMapped = NULL;
     }
     if (renderer->uniformMemory != VK_NULL_HANDLE) {
         vkFreeMemory(device, renderer->uniformMemory, NULL);

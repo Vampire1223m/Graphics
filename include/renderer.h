@@ -19,10 +19,12 @@ typedef struct {
     VkFence inFlightFence;
     VkBuffer vertexBuffer;
     VkDeviceMemory vertexMemory;
+    void *vertexMapped;
     VkBuffer indexBuffer;
     VkDeviceMemory indexMemory;
     VkBuffer uniformBuffer;
     VkDeviceMemory uniformMemory;
+    void *uniformMapped;
 } VulkanRenderer;
 
 bool initVulkanRenderer(VulkanCore* core, VulkanDisplay* display, VulkanRenderer* renderer, VulkanPipeline* pipeline);

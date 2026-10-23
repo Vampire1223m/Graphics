@@ -836,7 +836,7 @@ static void destroyRendererResources(VulkanCore* core, VulkanRenderer* renderer)
         vkDestroySemaphore(device, renderer->imageAvailable, NULL);
         renderer->imageAvailable = VK_NULL_HANDLE;
     }
-    if (renderer->renderFinished != VK_NULL_HANDLE) {
+    if (renderer->renderFinished != NULL) {
         for (uint32_t i = 0; i < renderer->renderFinishedCount; ++i) {
 
             if (renderer->renderFinished[i] != VK_NULL_HANDLE) {
@@ -852,7 +852,7 @@ static void destroyRendererResources(VulkanCore* core, VulkanRenderer* renderer)
         }
 
         free(renderer->renderFinished);
-        renderer->renderFinished = VK_NULL_HANDLE;
+        renderer->renderFinished = NULL;
         renderer->renderFinishedCount = 0;
         
     }
@@ -865,29 +865,38 @@ static void destroyRendererResources(VulkanCore* core, VulkanRenderer* renderer)
         vkDestroyBuffer(device, renderer->vertexBuffer, NULL);
         renderer->vertexBuffer = VK_NULL_HANDLE;
     }
-    if (renderer->vertexMemory) vkFreeMemory(device, renderer->vertexMemory, NULL);
+    if (renderer->vertexMemory != VK_NULL_HANDLE) {
+        vkFreeMemory(device, renderer->vertexMemory, NULL);
+        renderer->vertexMemory = VK_NULL_HANDLE;
+    }
     
     if (renderer->indexBuffer != VK_NULL_HANDLE) {
         vkDestroyBuffer(device, renderer->indexBuffer, NULL);
         renderer->indexBuffer = VK_NULL_HANDLE;
     }
-    if (renderer->indexMemory) vkFreeMemory(device, renderer->indexMemory, NULL);
+    if (renderer->indexMemory != VK_NULL_HANDLE) {
+        vkFreeMemory(device, renderer->indexMemory, NULL);
+        renderer->indexMemory = VK_NULL_HANDLE;
+    }
 
     if (renderer->descriptorPool != VK_NULL_HANDLE) {
         vkDestroyDescriptorPool(device, renderer->descriptorPool, NULL);
         renderer->descriptorPool = VK_NULL_HANDLE;
+        renderer->descriptorSet = VK_NULL_HANDLE;
     }
     if (renderer->uniformBuffer != VK_NULL_HANDLE) {
         vkDestroyBuffer(device, renderer->uniformBuffer, NULL);
         renderer->uniformBuffer = VK_NULL_HANDLE;
     }
-    if (renderer->uniformMemory) {
+    if (renderer->uniformMemory != VK_NULL_HANDLE) {
         vkFreeMemory(device, renderer->uniformMemory, NULL);
+        renderer->uniformMemory = VK_NULL_HANDLE;
     }
 
     if (renderer->cmdPool != VK_NULL_HANDLE) {
         vkDestroyCommandPool(device, renderer->cmdPool, NULL);
         renderer->cmdPool = VK_NULL_HANDLE;
+        renderer->cmdBuffer = VK_NULL_HANDLE;
     }
 
 }

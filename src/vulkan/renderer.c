@@ -16,7 +16,7 @@ static bool findMemoryType( VkPhysicalDevice physicalDevice, uint32_t allowedTyp
 
     for (uint32_t i = 0; i < memoryProperties.memoryTypeCount; i++)
     {
-        if ((allowedTypeBits & (1 << i)) && 
+        if ((allowedTypeBits & (1u << i)) && 
             ((memoryProperties.memoryTypes[i].propertyFlags & requiredProperties) == requiredProperties)){
 
             *memoryTypeIndex = i;
@@ -29,6 +29,8 @@ static bool findMemoryType( VkPhysicalDevice physicalDevice, uint32_t allowedTyp
     return false;
    
 }
+
+static void destroyRendererResources(VulkanCore *core, VulkanRenderer *renderer);
 
 bool initVulkanRenderer(VulkanCore* core, VulkanDisplay* display, VulkanRenderer* renderer, VulkanPipeline* pipeline) {
 
@@ -75,16 +77,6 @@ bool initVulkanRenderer(VulkanCore* core, VulkanDisplay* display, VulkanRenderer
                 &renderer->renderFinished[i]
             );
         if ( s != VK_SUCCESS){
-
-            for (uint32_t j = 0; j < i; ++j)
-            {
-                vkDestroySemaphore(device, renderer->renderFinished[j], NULL);
-            }
-            
-            free(renderer->renderFinished);
-
-            renderer->renderFinished = NULL;
-            renderer->renderFinishedCount = 0;
 
             fprintf(stderr, "failed to create render finished Semaphore: %d\n", s);
             goto fail;
@@ -416,6 +408,12 @@ bool initVulkanRenderer(VulkanCore* core, VulkanDisplay* display, VulkanRenderer
             NULL,
             &renderer->descriptorPool
         );
+    if (s != VK_SUCCESS) {
+
+        fprintf(stderr, "Failed to create descriptor pool: %d\n", s);
+        goto fail;
+
+    }
 
     VkDescriptorSetAllocateInfo dAllocInfo = {
                 .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO,
@@ -429,6 +427,12 @@ bool initVulkanRenderer(VulkanCore* core, VulkanDisplay* display, VulkanRenderer
             &dAllocInfo,
             &renderer->descriptorSet
         );
+    if (s != VK_SUCCESS) {
+
+        fprintf(stderr, "Failed to allocate descriptor set: %d\n", s);
+        goto fail;
+        
+    }
 
     VkDescriptorBufferInfo dBufferInfo = {
                 .buffer = renderer->uniformBuffer,
@@ -824,12 +828,15 @@ bool drawFrame(VulkanCore* core, VulkanDisplay* display, VulkanPipeline* pipelin
 
 }
 
-void distroyRendererResources(VulkanCore* core, VulkanRenderer* renderer) {
+static void destroyRendererResources(VulkanCore* core, VulkanRenderer* renderer) {
 
     VkDevice device = core->device;
 
-    if (renderer->imageAvailable) vkDestroySemaphore(device, renderer->imageAvailable, NULL);
-    if (renderer->renderFinished) {
+    if (renderer->imageAvailable != VK_NULL_HANDLE) {
+        vkDestroySemaphore(device, renderer->imageAvailable, NULL);
+        renderer->imageAvailable = VK_NULL_HANDLE;
+    }
+    if (renderer->renderFinished != VK_NULL_HANDLE) {
         for (uint32_t i = 0; i < renderer->renderFinishedCount; ++i) {
 
             if (renderer->renderFinished[i] != VK_NULL_HANDLE) {
@@ -845,24 +852,43 @@ void distroyRendererResources(VulkanCore* core, VulkanRenderer* renderer) {
         }
 
         free(renderer->renderFinished);
-        renderer->renderFinished = NULL;
+        renderer->renderFinished = VK_NULL_HANDLE;
         renderer->renderFinishedCount = 0;
         
     }
-    if (renderer->inFlightFence) vkDestroyFence(device, renderer->inFlightFence, NULL);
+    if (renderer->inFlightFence != VK_NULL_HANDLE) {
+        vkDestroyFence(device, renderer->inFlightFence, NULL);
+        renderer->inFlightFence = VK_NULL_HANDLE;
+    }
 
-    if (renderer->vertexBuffer) vkDestroyBuffer(device, renderer->vertexBuffer, NULL);
+    if (renderer->vertexBuffer != VK_NULL_HANDLE) {
+        vkDestroyBuffer(device, renderer->vertexBuffer, NULL);
+        renderer->vertexBuffer = VK_NULL_HANDLE;
+    }
     if (renderer->vertexMemory) vkFreeMemory(device, renderer->vertexMemory, NULL);
     
-    if (renderer->indexBuffer) vkDestroyBuffer(device, renderer->indexBuffer, NULL);
+    if (renderer->indexBuffer != VK_NULL_HANDLE) {
+        vkDestroyBuffer(device, renderer->indexBuffer, NULL);
+        renderer->indexBuffer = VK_NULL_HANDLE;
+    }
     if (renderer->indexMemory) vkFreeMemory(device, renderer->indexMemory, NULL);
 
-    if (renderer->descriptorPool) vkDestroyDescriptorPool(device, renderer->descriptorPool, NULL);
-    if (renderer->uniformBuffer) vkDestroyBuffer(device, renderer->uniformBuffer, NULL);
-    if (renderer->uniformMemory) vkFreeMemory(device, renderer->uniformMemory, NULL);
+    if (renderer->descriptorPool != VK_NULL_HANDLE) {
+        vkDestroyDescriptorPool(device, renderer->descriptorPool, NULL);
+        renderer->descriptorPool = VK_NULL_HANDLE;
+    }
+    if (renderer->uniformBuffer != VK_NULL_HANDLE) {
+        vkDestroyBuffer(device, renderer->uniformBuffer, NULL);
+        renderer->uniformBuffer = VK_NULL_HANDLE;
+    }
+    if (renderer->uniformMemory) {
+        vkFreeMemory(device, renderer->uniformMemory, NULL);
+    }
 
-
-    if (renderer->cmdPool) vkDestroyCommandPool(device, renderer->cmdPool, NULL);
+    if (renderer->cmdPool != VK_NULL_HANDLE) {
+        vkDestroyCommandPool(device, renderer->cmdPool, NULL);
+        renderer->cmdPool = VK_NULL_HANDLE;
+    }
 
 }
 
@@ -870,6 +896,6 @@ void cleanupVulkanRenderer(VulkanCore* core, VulkanRenderer* renderer) {
     
     vkDeviceWaitIdle(core->device);
 
-    distroyRendererResources(core, renderer);
+    destroyRendererResources(core, renderer);
 
 }

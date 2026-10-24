@@ -153,6 +153,8 @@ bool initVulkanRenderer(VulkanCore* core, VulkanDisplay* display, VulkanRenderer
         renderer->indexBuffer.size
     );
 
+    renderer->indexCount = indicesCount;
+
     if (!createVulkanBuffer(core, 
                             sizeof(uniformBufferObj), 
                             VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, 
@@ -468,7 +470,7 @@ bool drawFrame(VulkanCore* core, VulkanDisplay* display, VulkanPipeline* pipelin
     vkCmdSetViewport(cmdBuffer, 0, 1, &viewport);
     vkCmdSetScissor(cmdBuffer, 0, 1, &scissor);
 
-    vkCmdDrawIndexed(cmdBuffer, indicesCount, 1, 0, 0, 0);
+    vkCmdDrawIndexed(cmdBuffer, renderer->indexCount, 1, 0, 0, 0);
 
     //
     // Cmd Rendering End
@@ -734,6 +736,8 @@ static void destroyRendererResources(VulkanCore* core, VulkanRenderer* renderer)
         renderer->descriptorPool = VK_NULL_HANDLE;
         renderer->descriptorSet = VK_NULL_HANDLE;
     }
+
+    renderer->indexCount = 0;
     
     destroyVulkanBuffer(device, &renderer->vertexBuffer);
     destroyVulkanBuffer(device, &renderer->indexBuffer);

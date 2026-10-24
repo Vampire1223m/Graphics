@@ -14,6 +14,7 @@ typedef struct {
 } VulkanBuffer;
 
 typedef struct {
+    
     VkCommandPool cmdPool;
     VkDescriptorPool descriptorPool;
     VkDescriptorSet descriptorSet;
@@ -27,6 +28,8 @@ typedef struct {
     VulkanBuffer vertexBuffer;
     VulkanBuffer indexBuffer;
     VulkanBuffer uniformBuffer;
+
+    uint32_t indexCount;
 
 } VulkanRenderer;
 
